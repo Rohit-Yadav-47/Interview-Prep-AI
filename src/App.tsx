@@ -6,6 +6,8 @@ import {
   Heart,
   Terminal,
   Layout,
+  Menu,
+  X
 } from 'lucide-react';
 
 // Import page components
@@ -30,6 +32,8 @@ const Header = ({
   question,
   navigateTo,
 }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   // Helper function to format remaining time
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -38,11 +42,20 @@ const Header = ({
   };
 
   const isInterviewStarted = currentPage !== 'home';
+  
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+  
+  const handleNavigation = (page, mode) => {
+    navigateTo(page, mode);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header className="relative z-20 bg-black backdrop-blur-lg border-b border-blue-900/50 sticky top-0 shadow-xl">
       <div className="max-w-[98%] xl:max-w-[95%] mx-auto px-4 py-4">
-        <div className="flex flex-row gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-row items-center justify-between">
           
           <div 
             className="flex items-center gap-3 cursor-pointer" 
@@ -56,8 +69,22 @@ const Header = ({
               CodeSense AI
             </h1>
           </div>
-          {/* Main Navigation */}
-          <nav className="flex items-center gap-3">
+          
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={toggleMobileMenu}
+            className="md:hidden flex items-center z-30"
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? (
+              <X size={24} className="text-gray-100" />
+            ) : (
+              <Menu size={24} className="text-gray-100" />
+            )}
+          </button>
+          
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-3">
             <div className="relative flex rounded-xl overflow-hidden border border-gray-700/50 shadow-lg backdrop-blur-sm">
               <button
                 onClick={() => navigateTo('coding-interview', 'coding')}
@@ -102,8 +129,51 @@ const Header = ({
               </button>
             </div>
           </nav>
+          
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-20 md:hidden flex items-center justify-center">
+              <div className="flex flex-col items-center gap-6 p-6 w-full max-w-sm">
+                <button
+                  onClick={() => handleNavigation('coding-interview', 'coding')}
+                  className={`w-full px-4 py-5 flex items-center gap-3 justify-center rounded-xl transition-all duration-300 
+                    ${isInterviewStarted && interviewMode === 'coding'
+                      ? 'bg-gradient-to-r from-blue-600/80 to-blue-500/60 text-blue-100' 
+                      : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`}
+                >
+                  <Terminal size={22} />
+                  <span className="font-medium text-lg">Interview Mode</span>
+                  {isInterviewStarted && interviewMode === 'coding' && (
+                    <span className="ml-1 w-2 h-2 rounded-full bg-blue-300 shadow-[0_0_8px_2px_rgba(59,130,246,0.5)] animate-pulse"></span>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => handleNavigation('frontend-test', 'frontend')}
+                  className={`w-full px-4 py-5 flex items-center gap-3 justify-center rounded-xl transition-all duration-300
+                    ${isInterviewStarted && interviewMode === 'frontend'
+                      ? 'bg-gradient-to-r from-green-600/80 to-green-500/60 text-green-100' 
+                      : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`}
+                >
+                  <Layout size={22} />
+                  <span className="font-medium text-lg">Frontend Test</span>
+                  {isInterviewStarted && interviewMode === 'frontend' && (
+                    <span className="ml-1 w-2 h-2 rounded-full bg-green-300 shadow-[0_0_8px_2px_rgba(34,197,94,0.5)] animate-pulse"></span>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => handleNavigation('home')}
+                  className="w-full px-4 py-5 flex items-center gap-3 justify-center rounded-xl bg-gray-800/60 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-300"
+                >
+                  <span className="font-medium text-lg">Back Home</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-     
       </div>
     </header>
   );
