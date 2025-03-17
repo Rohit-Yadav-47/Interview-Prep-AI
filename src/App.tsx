@@ -169,10 +169,10 @@ const MainContent = ({
   activeSpeechMode,
 }) => {
   return (
-    <main className="flex-grow max-w-7xl mx-auto px-4 py-6 w-full relative z-10">
+    <main className="flex-grow max-w-7xl  mx-auto px-4 sm:px-6 lg:px-8 sm:py-16 md:py-20 w-full relative z-10 ">
       {!isInterviewStarted ? (
-        <div className="flex items-center justify-center h-[calc(100vh-14rem)]">
-          <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl p-8 max-w-3xl w-full text-center shadow-xl border border-blue-900/50">
+        <div className="flex items-center justify-center min-h-[500px]">
+          <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl p-6 sm:p-8 max-w-3xl w-full text-center shadow-xl border border-blue-900/50">
             <div className="w-24 h-24 mx-auto mb-6 relative">
               <div className="absolute inset-0 bg-blue-500 rounded-full blur-md animate-pulse"></div>
               <Brain className="w-full h-full relative z-10 text-white" />
@@ -242,14 +242,13 @@ const MainContent = ({
           {/* Interview components - always rendered but conditionally visible */}
           <div className={interviewMode === 'coding' ? 'block' : 'hidden'}>
             <div
-              className={`grid gap-6 h-[calc(100vh-14rem)] transition-all duration-300
+              className={`grid gap-6 min-h-[500px] mb-10 transition-all duration-300 overflow-y-auto
                 ${activeView === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}
                 ${activeView === 'chat' ? 'md:grid-cols-1' : ''}
                 ${activeView === 'code' ? 'md:grid-cols-1' : ''}`}
             >
               {(activeView === 'split' || activeView === 'chat') && (
-                <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl overflow-hidden border-blue-900/50 border shadow-lg hover:shadow-xl transition-shadow duration-300">
-             
+                <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl overflow-hidden border-blue-900/50 border shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[400px]">
                   <Chat
                     messages={messages}
                     streamingMessage={streamingMessage}
@@ -261,8 +260,7 @@ const MainContent = ({
                 </div>
               )}
               {(activeView === 'split' || activeView === 'code') && (
-                <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl overflow-hidden border-blue-900/50 border shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  
+                <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl overflow-hidden border-blue-900/50 border shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[400px]">
                   <CodeEditor
                     question={question}
                     code={code}
@@ -280,12 +278,12 @@ const MainContent = ({
           
           {/* Frontend Test - Better integration with interview functionality */}
           <div className={interviewMode === 'frontend' ? 'block' : 'hidden'}>
-            <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl border border-blue-900/50 shadow-lg h-[calc(100vh-14rem)] overflow-hidden">
+            <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl border border-blue-900/50 shadow-lg min-h-[500px] mb-10 overflow-hidden">
               <ReactCodeCompiler 
                 darkMode={true} 
                 enableSpeech={activeSpeechMode === 'frontend'}
                 interviewComponent={
-                  <div className="w-full p-2">
+                  <div className="w-full p-2 h-full overflow-y-auto">
                     <div className="rounded-xl overflow-hidden border border-purple-500/20 shadow-lg">
                       <Chat
                         messages={messages}
@@ -437,7 +435,7 @@ function App() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 to-blue-950 transition-all duration-500">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 to-blue-950 transition-all duration-500 relative">
       <FloatingParticles />
       <Header
         isInterviewStarted={isInterviewStarted}
