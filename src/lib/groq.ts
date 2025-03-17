@@ -225,19 +225,24 @@ export async function analyzeCodingSolution(
   const useContext = options?.useContext !== false; // Default to using context
   
   const prompt = `
-    ${question ? `Question/Context: ${question}` : 'The user has submitted code for review.'}
+    Remember that you are an experienced technical interviewer conducting a software engineering interview.
     
-    Solution:
+    You should refer to our ongoing interview conversation and the coding question I previously asked.
+    ${question ? `The coding question was: "${question}"` : 'Review the recent conversation to identify the coding question I asked.'}
+    
+    The candidate has submitted this solution:
     ${solution}
     
-    Please analyze this solution and provide:
-    1. What the code does
-    2. Time and space complexity if applicable
-    3. Potential improvements
-    4. Any bugs or edge cases to consider
-    5. Overall code quality assessment
-
-    give concise and crisp only a paragraph of output always 
+    As the interviewer, evaluate this code while maintaining your interviewer persona. Your analysis should:
+    1. Reference the specific question from our conversation
+    2. Evaluate the solution's correctness in solving that specific problem
+    3. Analyze time and space complexity
+    4. Identify potential optimizations
+    5. Note any edge cases that might be missed
+    6. Assess overall code quality
+    
+    Respond as if we are continuing our interview conversation. Your response should feel like a natural follow-up
+    to our previous discussion about this problem. Be conversational yet professional as a technical interviewer.
   `;
 
   let messages = [];
@@ -299,67 +304,6 @@ export async function analyzeCodingSolution(
       console.error('Error in analysis stream:', error);
     }
     return fullResponse;
-  }
-}
-
-export async function generateQuestion(
-  options?: { contextKey?: string, useContext?: boolean }
-): Promise<{
-  title: string;
-  description: string;
-  difficulty: string;
-}> {
-  const contextKey = options?.contextKey || DEFAULT_CONTEXT_KEY;
-  const useContext = options?.useContext !== false; // Default to using context
-  
-  const prompt = `Generate a coding interview question with the following format:
-  {
-    "title": "Question title",
-    "description": "Detailed problem description with examples and constraints",
-    "difficulty": "easy|medium|hard"
-  }
-  
-  Make sure the description includes clear input/output examples and any constraints.`;
-
-  let messages = [];
-  
-  if (useContext) {
-    // Get existing context and add our new prompt
-    const context = getOrCreateContext(contextKey);
-    messages = [...context.messages, { role: "user", content: prompt }];
-  } else {
-    messages = [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: prompt }
-    ];
-  }
-
-  try {
-    const response = await client.chat.completions.create({
-      model: MODEL,
-      messages: messages,
-      max_tokens: 4000,
-    });
-    
-    const content = response.choices[0]?.message?.content || '';
-    const result = JSON.parse(content);
-    
-    // Update context with this interaction
-    if (useContext) {
-      updateContext([
-        { role: "user", content: prompt },
-        { role: "assistant", content: content }
-      ], contextKey);
-    }
-    
-    return result;
-  } catch (error) {
-    console.error('Error generating question:', error);
-    return {
-      title: "Error generating question",
-      description: "There was an error generating the question. Please try again.",
-      difficulty: "medium"
-    };
   }
 }
 

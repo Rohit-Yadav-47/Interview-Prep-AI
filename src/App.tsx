@@ -166,12 +166,13 @@ const MainContent = ({
   isProcessing,
   timeRemaining,
   startInterview,
+  activeSpeechMode,
 }) => {
   return (
     <main className="flex-grow max-w-7xl mx-auto px-4 py-6 w-full relative z-10">
       {!isInterviewStarted ? (
         <div className="flex items-center justify-center h-[calc(100vh-14rem)]">
-          <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl p-8 max-w-2xl w-full text-center shadow-xl border border-blue-900/50">
+          <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl p-8 max-w-3xl w-full text-center shadow-xl border border-blue-900/50">
             <div className="w-24 h-24 mx-auto mb-6 relative">
               <div className="absolute inset-0 bg-blue-500 rounded-full blur-md animate-pulse"></div>
               <Brain className="w-full h-full relative z-10 text-white" />
@@ -180,11 +181,11 @@ const MainContent = ({
               Welcome to CodeSense AI
             </h2>
             <p className="text-gray-300 mb-8 text-lg">
-              Select your preferred assessment method:
+              Your AI-powered coding interview and frontend development platform
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Coding Interview Card */}
-              <div className="bg-gray-800/50 rounded-xl border border-blue-900/50 p-6 text-left hover:border-blue-700/50 transition-all">
+              {/* Coding Interview Card - Enhanced */}
+              <div className="bg-gray-800/50 rounded-xl border border-blue-900/50 p-6 text-left hover:border-blue-700/50 transition-all hover:shadow-lg hover:shadow-blue-900/20 hover:-translate-y-0.5 duration-300">
                 <div className="bg-blue-600/30 rounded-full w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-blue-600/40 transition-colors">
                   <Terminal size={24} className="text-blue-300" />
                 </div>
@@ -194,6 +195,11 @@ const MainContent = ({
                 <p className="text-gray-400 mb-4">
                   AI-driven technical interview with code assessment and problem-solving challenges.
                 </p>
+                <ul className="text-gray-400 text-sm mb-4 space-y-1.5 list-inside list-disc">
+                  <li>Real-time voice conversation</li>
+                  <li>Personalized coding challenges</li>
+                  <li>Code evaluation and feedback</li>
+                </ul>
                 <button 
                   onClick={() => startInterview('coding')}
                   className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600/80 to-purple-600/80 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition shadow-lg hover:shadow-blue-500/20 flex items-center justify-center gap-2 relative"
@@ -203,8 +209,8 @@ const MainContent = ({
                   <span className="relative z-10">Start Interview</span>
                 </button>
               </div>
-              {/* Frontend Test Card */}
-              <div className="bg-gray-800/50 rounded-xl border border-green-900/50 p-6 text-left hover:border-green-700/50 transition-all">
+              {/* Frontend Test Card - Enhanced */}
+              <div className="bg-gray-800/50 rounded-xl border border-green-900/50 p-6 text-left hover:border-green-700/50 transition-all hover:shadow-lg hover:shadow-green-900/20 hover:-translate-y-0.5 duration-300">
                 <div className="bg-green-600/30 rounded-full w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-green-600/40 transition-colors">
                   <Layout size={24} className="text-green-300" />
                 </div>
@@ -214,6 +220,11 @@ const MainContent = ({
                 <p className="text-gray-400 mb-4">
                   Interactive React playground to showcase your frontend and UI development skills.
                 </p>
+                <ul className="text-gray-400 text-sm mb-4 space-y-1.5 list-inside list-disc">
+                  <li>Live React coding environment</li>
+                  <li>Real-time preview of your code</li>
+                  <li>Multiple starter templates</li>
+                </ul>
                 <button 
                   onClick={() => startInterview('frontend')}
                   className="w-full px-4 py-2.5 bg-gradient-to-r from-green-600/80 to-teal-600/80 hover:from-green-500 hover:to-teal-500 text-white font-medium rounded-lg transition shadow-lg hover:shadow-green-500/20 flex items-center justify-center gap-2 relative"
@@ -228,7 +239,8 @@ const MainContent = ({
         </div>
       ) : (
         <>
-          {interviewMode === 'coding' ? (
+          {/* Interview components - always rendered but conditionally visible */}
+          <div className={interviewMode === 'coding' ? 'block' : 'hidden'}>
             <div
               className={`grid gap-6 h-[calc(100vh-14rem)] transition-all duration-300
                 ${activeView === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}
@@ -237,45 +249,20 @@ const MainContent = ({
             >
               {(activeView === 'split' || activeView === 'chat') && (
                 <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl overflow-hidden border-blue-900/50 border shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 flex justify-between items-center">
-                    <h2 className="text-white font-medium flex items-center gap-2">
-                      <Send size={16} />
-                      <span>Conversation</span>
-                    </h2>
-                    {activeView !== 'split' && (
-                      <button
-                        onClick={() => setActiveView('code')}
-                        className="p-1 rounded bg-white/20 hover:bg-white/30 text-white"
-                      >
-                        <Code size={14} />
-                      </button>
-                    )}
-                  </div>
+             
                   <Chat
                     messages={messages}
                     streamingMessage={streamingMessage}
                     onSendMessage={onSendMessage}
                     isProcessing={isProcessing}
                     darkMode={true}
+                    enableSpeech={activeSpeechMode === 'coding'}
                   />
                 </div>
               )}
               {(activeView === 'split' || activeView === 'code') && (
                 <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl overflow-hidden border-blue-900/50 border shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 flex justify-between items-center">
-                    <h2 className="text-white font-medium flex items-center gap-2">
-                      <Code size={16} />
-                      <span>Code Editor</span>
-                    </h2>
-                    {activeView !== 'split' && (
-                      <button
-                        onClick={() => setActiveView('chat')}
-                        className="p-1 rounded bg-white/20 hover:bg-white/30 text-white"
-                      >
-                        <Send size={14} />
-                      </button>
-                    )}
-                  </div>
+                  
                   <CodeEditor
                     question={question}
                     code={code}
@@ -284,15 +271,36 @@ const MainContent = ({
                     timeRemaining={timeRemaining}
                     isProcessing={isProcessing}
                     darkMode={true}
+                    isInterviewStarted={isInterviewStarted}
                   />
                 </div>
               )}
             </div>
-          ) : (
+          </div>
+          
+          {/* Frontend Test - Better integration with interview functionality */}
+          <div className={interviewMode === 'frontend' ? 'block' : 'hidden'}>
             <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl border border-blue-900/50 shadow-lg h-[calc(100vh-14rem)] overflow-hidden">
-              <ReactCodeCompiler darkMode={true} />
+              <ReactCodeCompiler 
+                darkMode={true} 
+                enableSpeech={activeSpeechMode === 'frontend'}
+                interviewComponent={
+                  <div className="w-full p-2">
+                    <div className="rounded-xl overflow-hidden border border-purple-500/20 shadow-lg">
+                      <Chat
+                        messages={messages}
+                        streamingMessage={streamingMessage}
+                        onSendMessage={onSendMessage}
+                        isProcessing={isProcessing}
+                        darkMode={true}
+                        enableSpeech={activeSpeechMode === 'frontend'}
+                      />
+                    </div>
+                  </div>
+                }
+              />
             </div>
-          )}
+          </div>
         </>
       )}
     </main>
@@ -309,6 +317,8 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeView, setActiveView] = useState('split'); // 'split', 'chat', 'code'
   const [interviewMode, setInterviewMode] = useState<'coding' | 'frontend'>('coding');
+  // Add a state to track which mode has active speech
+  const [activeSpeechMode, setActiveSpeechMode] = useState<'coding' | 'frontend' | null>(null);
 
   // Timer effect for countdown
   useEffect(() => {
@@ -339,7 +349,7 @@ function App() {
 
   // Send message handler
   const handleSendMessage = useCallback(
-    async (content) => {
+    async (content, role = 'user') => {
       // If content indicates a mode start, set up interview accordingly
       if (content === 'start-interview-coding') {
         startInterview('coding');
@@ -349,30 +359,34 @@ function App() {
         startInterview('frontend');
         return;
       }
-      const userMessage: Message = { role: 'user', content };
+      
+      const userMessage: Message = { role, content };
       setMessages((prev) => [...prev, userMessage]);
-      setStreamingMessage({ role: 'assistant', content: '' });
-      setIsProcessing(true);
+      
+      if (role === 'user') {
+        setStreamingMessage({ role: 'assistant', content: '' });
+        setIsProcessing(true);
 
-      try {
-        const streamController = new AbortController();
-        const responsePromise = chat([...messages, userMessage], {
-          onStreamChunk: (chunk) => {
-            setStreamingMessage((current) =>
-              current ? { ...current, content: current.content + chunk } : { role: 'assistant', content: chunk }
-            );
-          },
-          signal: streamController.signal,
-        });
+        try {
+          const streamController = new AbortController();
+          const responsePromise = chat([...messages, userMessage], {
+            onStreamChunk: (chunk) => {
+              setStreamingMessage((current) =>
+                current ? { ...current, content: current.content + chunk } : { role: 'assistant', content: chunk }
+              );
+            },
+            signal: streamController.signal,
+          });
 
-        const fullResponse = await responsePromise;
-        setMessages((prev) => [...prev, { role: 'assistant', content: fullResponse }]);
-        setStreamingMessage(null);
-      } catch (error) {
-        console.error('Error getting response:', error);
-        setStreamingMessage(null);
-      } finally {
-        setIsProcessing(false);
+          const fullResponse = await responsePromise;
+          setMessages((prev) => [...prev, { role: 'assistant', content: fullResponse }]);
+          setStreamingMessage(null);
+        } catch (error) {
+          console.error('Error getting response:', error);
+          setStreamingMessage(null);
+        } finally {
+          setIsProcessing(false);
+        }
       }
     },
     [messages]
@@ -414,7 +428,9 @@ function App() {
   // Start interview handler
   const startInterview = useCallback((mode: 'coding' | 'frontend') => {
     setIsInterviewStarted(true);
-    setInterviewMode(mode as 'coding' | 'frontend');
+    setInterviewMode(mode);
+    // Set this mode as the active speech mode
+    setActiveSpeechMode(mode);
     // Reset timer or any additional state if needed
     setTimeRemaining(900);
     // Optionally, load a new question based on mode here
@@ -446,6 +462,7 @@ function App() {
         isProcessing={isProcessing}
         timeRemaining={timeRemaining}
         startInterview={startInterview}
+        activeSpeechMode={activeSpeechMode}
       />
       <Footer />
     </div>

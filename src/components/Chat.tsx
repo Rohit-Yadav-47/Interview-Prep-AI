@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, Phone, PhoneOff, Mic, Settings, Maximize, X, ChevronDown, Share2, PlayCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, Phone, PhoneOff, Mic, Settings, Maximize, X, Share2, PlayCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import VoiceControl from './VoiceControl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,10 +8,10 @@ import { Message } from '../types';
 interface ChatProps {
   messages: Message[];
   streamingMessage: Message | null;
-  // Updated onSendMessage to accept a role parameter
   onSendMessage: (content: string, role?: 'assistant' | 'user') => void;
   isProcessing: boolean;
   darkMode: boolean;
+  enableSpeech?: boolean;
 }
 
 export default function Chat({ 
@@ -19,7 +19,8 @@ export default function Chat({
   streamingMessage, 
   onSendMessage, 
   isProcessing,
-  darkMode 
+  darkMode,
+  enableSpeech = true
 }: ChatProps) {
   const [input, setInput] = useState('');
   const [isCallMode, setIsCallMode] = useState(false);
@@ -29,15 +30,22 @@ export default function Chat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  
-  // Generate random audio visualization for demo purposes
+
+  // Smoother audio visualization using requestAnimationFrame with a simple throttle
   useEffect(() => {
     if (isCallMode) {
-      const interval = setInterval(() => {
-        const newVisualization = Array(20).fill(0).map(() => Math.random() * 100);
-        setAudioVisualization(newVisualization);
-      }, 100);
-      return () => clearInterval(interval);
+      let animationFrame: number;
+      let lastTime = performance.now();
+      const updateVisualization = (time: number) => {
+        if (time - lastTime >= 100) {
+          lastTime = time;
+          const newVisualization = Array.from({ length: 20 }, () => Math.random() * 100);
+          setAudioVisualization(newVisualization);
+        }
+        animationFrame = requestAnimationFrame(updateVisualization);
+      };
+      animationFrame = requestAnimationFrame(updateVisualization);
+      return () => cancelAnimationFrame(animationFrame);
     }
   }, [isCallMode]);
 
@@ -55,7 +63,7 @@ export default function Chat({
     }
   }, [isProcessing]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
       await onSendMessage(input, 'user');
@@ -65,38 +73,37 @@ export default function Chat({
         setTimeout(() => containerRef.current?.classList.remove('pulse-send'), 1000);
       }
     }
-  };
+  }, [input, onSendMessage]);
 
-  const handleSpeechResult = async (text: string) => {
+  const handleSpeechResult = useCallback(async (text: string) => {
     if (text.trim()) {
+      console.log("Processing speech result:", text);
       await onSendMessage(text, 'user');
     }
-  };
-  
-  const startInterview = () => {
-    setIsCallMode(!isCallMode);
-    if (!isCallMode) {
-      // Send the welcome message with assistant role only once
-      if (messages.length === 0) {
+  }, [onSendMessage]);
+
+  // Only start interview if speech is enabled
+  const startInterview = useCallback(() => {
+    if (!enableSpeech) {
+      console.log("Speech functionality is disabled in this mode");
+      return;
+    }
+    
+    setIsCallMode((prev) => {
+      const newMode = !prev;
+      if (!prev && messages.length === 0) {
         setTimeout(() => {
           onSendMessage(
-            "Hello",
+            "Hello, Can you feed your resume or what kind of interview are you looking for today?",
             'assistant'
           );
         }, 800);
       }
-    }
-  };
-  
-  const handleAIResponse = (text: string) => {
-    if (isCallMode || isSpeaking) {
-      return processTextForSpeech(text);
-    }
-    return "";
-  };
-  
-  // Process text to make it more suitable for speech
-  const processTextForSpeech = (text: string): string => {
+      return newMode;
+    });
+  }, [enableSpeech, messages, onSendMessage]);
+
+  const processTextForSpeech = useCallback((text: string): string => {
     let processed = text.replace(/```[\s\S]*?```/g, "I've included a code example that you can see in the text.");
     processed = processed
       .replace(/\*\*(.*?)\*\*/g, "$1")
@@ -112,46 +119,19 @@ export default function Chat({
     processed = processed.replace(/^[-*]\s*(.*?)$/gm, "• $1.");
     const sentences = processed.match(/[^.!?]+[.!?]+/g) || [processed];
     return sentences.join(' ');
-  };
+  }, []);
 
-  // Generate particle effects 
-  const createParticles = (x: number, y: number) => {
-    const target = document.elementFromPoint(x, y);
-    if (target && (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.closest('button') || target.closest('input'))) {
-      return;
+  const handleAIResponse = useCallback((text: string) => {
+    if (isCallMode || isSpeaking) {
+      return processTextForSpeech(text);
     }
-    const container = document.createElement('div');
-    container.className = 'particle-container';
-    container.style.position = 'absolute';
-    container.style.left = `${x}px`;
-    container.style.top = `${y}px`;
-    container.style.pointerEvents = 'none';
-    container.style.zIndex = '100';
-    for (let i = 0; i < 10; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'particle';
-      const size = Math.random() * 10 + 5;
-      particle.style.width = `${size}px`;
-      particle.style.height = `${size}px`;
-      particle.style.background = `hsl(${Math.random() * 60 + 200}, 100%, 70%)`;
-      particle.style.borderRadius = '50%';
-      particle.style.position = 'absolute';
-      particle.style.transform = `translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 - 20}px)`;
-      particle.style.opacity = '0';
-      particle.style.animation = `particle-fade ${Math.random() * 1 + 0.5}s forwards`;
-      container.appendChild(particle);
-    }
-    document.body.appendChild(container);
-    setTimeout(() => document.body.removeChild(container), 2000);
-  };
+    return "";
+  }, [isCallMode, isSpeaking, processTextForSpeech]);
 
   return (
     <div 
       ref={containerRef}
       className="flex flex-col h-full relative perspective-1000 overflow-hidden"
-      onClick={(e) => {
-        if (!isProcessing) createParticles(e.clientX, e.clientY);
-      }}
     >
       {/* Animated Background */}
       <div className={`fixed inset-0 bg-grid z-0 ${darkMode ? 'bg-grid-dark' : 'bg-grid-light'}`}>
@@ -183,22 +163,24 @@ export default function Chat({
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={startInterview}
-              className={`relative group flex items-center gap-2 px-4 py-2 rounded-full ${isCallMode
-                ? 'bg-gradient-to-r from-red-500 to-pink-500'
-                : 'bg-gradient-to-r from-blue-400 to-indigo-500'
-              } hover:shadow-glow transition-all duration-300`}
-            >
-              <span className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-400/20 to-blue-500/20 animate-pulse-slow opacity-80 group-hover:opacity-100"></span>
-              {isCallMode ? (
-                <><PhoneOff size={16} /> <span>End Interview</span></>
-              ) : (
-                <><PlayCircle size={16} /> <span>Start Interview</span></>
-              )}
-            </motion.button>
+            {enableSpeech && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={startInterview}
+                className={`relative group flex items-center gap-2 px-4 py-2 rounded-full ${isCallMode
+                  ? 'bg-gradient-to-r from-red-500 to-pink-500'
+                  : 'bg-gradient-to-r from-blue-400 to-indigo-500'
+                } hover:shadow-glow transition-all duration-300`}
+              >
+                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-400/20 to-blue-500/20 animate-pulse-slow opacity-80 group-hover:opacity-100"></span>
+                {isCallMode ? (
+                  <><PhoneOff size={16} /> <span>End Interview</span></>
+                ) : (
+                  <><PlayCircle size={16} /> <span>Start Interview</span></>
+                )}
+              </motion.button>
+            )}
             <motion.button 
               whileHover={{ rotate: 180 }}
               transition={{ duration: 0.5 }}
@@ -259,8 +241,7 @@ export default function Chat({
 
       {/* Messages Container */}
       <div 
-        className={`flex-1 overflow-y-auto p-6 space-y-6 z-10 relative ${darkMode ? 'bg-gradient-mesh-dark' : 'bg-gradient-mesh-light'}`}
-        onClick={(e) => e.stopPropagation()}
+        className={`flex-1 ${messages.length === 0 && !streamingMessage ? 'overflow-hidden' : 'overflow-y-auto'} p-6 space-y-6 z-10 relative ${darkMode ? 'bg-gradient-mesh-dark' : 'bg-gradient-mesh-light'}`}
       >
         {messages.length === 0 && !streamingMessage && (
           <div className="flex flex-col items-center justify-center h-full">
@@ -310,7 +291,6 @@ export default function Chat({
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ type: "spring", stiffness: 500, damping: 30, delay: (index * 0.05) % 0.2 }}
               className={`flex ${message.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
-              onClick={(e) => e.stopPropagation()}
             >
               <div className="max-w-[85%] relative group transition-all duration-300">
                 {message.role === 'assistant' && (
@@ -347,7 +327,6 @@ export default function Chat({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
             className={`flex ${streamingMessage.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
-            onClick={(e) => e.stopPropagation()}
           >
             <div
               className={`max-w-[85%] relative ${streamingMessage.role === 'assistant'
@@ -383,7 +362,6 @@ export default function Chat({
         animate={{ y: 0 }}
         transition={{ delay: 0.3 }}
         className="relative z-20 p-4 bg-transparent"
-        onClick={(e) => e.stopPropagation()}
       >
         {isCallMode && (
           <div className="flex items-center justify-center mb-4">
@@ -394,16 +372,18 @@ export default function Chat({
           </div>
         )}
         <div className="flex flex-col gap-4">
-          <div className="flex justify-center space-x-4">
-            <VoiceControl
-              onSpeechResult={handleSpeechResult}
-              onAIResponse={handleAIResponse}
-              isCallMode={isCallMode}
-              isSpeaking={isSpeaking}
-              setIsSpeaking={setIsSpeaking}
-              darkMode={darkMode}
-            />
-          </div>
+          {enableSpeech && (
+            <div className="flex justify-center space-x-4">
+              <VoiceControl
+                onSpeechResult={handleSpeechResult}
+                onAIResponse={handleAIResponse}
+                isCallMode={isCallMode}
+                isSpeaking={isSpeaking}
+                setIsSpeaking={setIsSpeaking}
+                darkMode={darkMode}
+              />
+            </div>
+          )}
           <div className="relative z-30">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 z-0"></div>
             <form onSubmit={handleSubmit} className="relative z-10">
@@ -416,7 +396,6 @@ export default function Chat({
                   placeholder={isCallMode ? "Speak or type your message..." : "Type your message..."}
                   className="w-full px-6 py-4 bg-white/5 focus:bg-white/10 text-white placeholder-blue-300/50 focus:outline-none focus:ring-1 focus:ring-blue-400/30 transition-all duration-300 relative z-10"
                   disabled={isProcessing}
-                  onClick={(e) => e.stopPropagation()}
                 />
                 <div className="absolute inset-y-0 right-0 pr-1 flex items-center gap-2 z-20">
                   <motion.button
@@ -428,7 +407,6 @@ export default function Chat({
                       ? 'bg-blue-500/30 cursor-not-allowed' 
                       : 'bg-gradient-to-r from-blue-500 to-cyan-500 cursor-pointer hover:shadow-glow'
                     } transition-all duration-300`}
-                    onClick={(e) => e.stopPropagation()}
                   >
                     <Send size={20} className="text-white" />
                   </motion.button>
@@ -436,7 +414,7 @@ export default function Chat({
               </div>
             </form>
           </div>
-          {isCallMode && messages.length > 0 && (
+          {isCallMode && messages.length > 0 && enableSpeech && (
             <div className="text-center text-xs text-blue-300/60">
               Click the input field to type your response or use voice controls
             </div>
@@ -469,7 +447,6 @@ export default function Chat({
           background-image: radial-gradient(circle at 15% 50%, #e0e8ff80 0%, transparent 25%),
                            radial-gradient(circle at 85% 30%, #d5e5ff80 0%, transparent 25%);
         }
-        .particle-container, .particle { pointer-events: none !important; }
         .shadow-neon { box-shadow: 0 0 15px 0 rgba(56, 189, 248, 0.3); }
         .shadow-glow {
           box-shadow: 0 0 10px 0 rgba(56, 189, 248, 0.3),
@@ -514,13 +491,8 @@ export default function Chat({
         .typing-indicator span:nth-of-type(2) { animation: 1s blink infinite 0.6666s; }
         .typing-indicator span:nth-of-type(3) { animation: 1s blink infinite 0.9999s; }
         @keyframes blink { 50% { opacity: 1; } }
-        @keyframes particle-fade { 0% { transform: translateY(0) translateX(0); opacity: 1; } 100% { transform: translateY(-20px) translateX(var(--x-end, 0)); opacity: 0; } }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb {
-          background-color: rgba(56, 189, 248, 0.5);
-          border-radius: 4px;
-        }
+        /* Hide native scrollbar */
+        ::-webkit-scrollbar { display: none; }
         form, input, button { position: relative; }
       `}</style>
     </div>

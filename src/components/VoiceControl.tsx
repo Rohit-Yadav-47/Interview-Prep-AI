@@ -9,6 +9,7 @@ interface VoiceControlProps {
   isSpeaking: boolean;
   setIsSpeaking: (speaking: boolean) => void;
   darkMode: boolean;
+  disabled?: boolean; // Add this prop
 }
 
 export default function VoiceControl({ 
@@ -17,7 +18,8 @@ export default function VoiceControl({
   isCallMode = false,
   isSpeaking,
   setIsSpeaking,
-  darkMode
+  darkMode,
+  disabled = false // Default to false
 }: VoiceControlProps) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeechActive, setIsSpeechActive] = useState(false);
@@ -35,9 +37,9 @@ export default function VoiceControl({
   const currentStreamSpeechRef = useRef<string>('');
   const lastProcessedLengthRef = useRef<number>(0);
   
-  // Initialize the speech handler
+  // Initialize the speech handler, but only if not disabled
   useEffect(() => {
- 
+    if (disabled) return; // Don't initialize speech if disabled
     
     const handler = new SpeechHandler((text) => {
       if (text.trim()) {
@@ -59,10 +61,12 @@ export default function VoiceControl({
         handler.stopListening();
       }
     };
-  }, [onSpeechResult, isCallMode]);
+  }, [onSpeechResult, isCallMode, disabled]);
 
-  // Handle call mode changes
+  // Handle call mode changes (only if not disabled)
   useEffect(() => {
+    if (disabled) return;
+    
     const handler = speechHandlerRef.current;
     if (!handler) return;
     
@@ -81,10 +85,12 @@ export default function VoiceControl({
       handler.stopListening();
       setIsListening(false);
     }
-  }, [isCallMode, isListening, setIsSpeaking]);
+  }, [isCallMode, isListening, setIsSpeaking, disabled]);
 
   // Listen for speech events
   useEffect(() => {
+    if (disabled) return;
+
     const handleSpeechStarted = () => {
       setIsSpeechActive(true);
       setIsAISpeaking(true);
@@ -134,7 +140,7 @@ export default function VoiceControl({
       window.removeEventListener('speech-ended', handleSpeechEnded);
       window.removeEventListener('speech-listening-changed', handleListeningChanged);
     };
-  }, [isCallMode, isListening]);
+  }, [isCallMode, isListening, disabled]);
 
   const toggleListening = useCallback(() => {
     const handler = speechHandlerRef.current;
@@ -211,6 +217,8 @@ export default function VoiceControl({
 
   // Connect to the AI message event with streaming support
   useEffect(() => {
+    if (disabled) return;
+
     const handleNewAIMessage = (e: any) => {
       const { messages, isStreaming, streamContent } = e.detail;
       
@@ -242,7 +250,7 @@ export default function VoiceControl({
     window.addEventListener('new-ai-message', handleNewAIMessage);
     
     return () => window.removeEventListener('new-ai-message', handleNewAIMessage);
-  }, [processStreamingSpeech]);
+  }, [processStreamingSpeech, disabled]);
   
   // Reload voices function - useful if voices didn't load correctly
   const reloadVoices = () => {
@@ -256,14 +264,8 @@ export default function VoiceControl({
     }, 1500);
   };
 
-
-
-  if (!recognitionSupported) {
-    return (
-      <div className={`text-sm ${darkMode ? 'text-red-400' : 'text-red-500'}`}>
-        Speech recognition not supported in your browser
-      </div>
-    );
+  if (disabled || !recognitionSupported) {
+    return null; // Don't render anything if disabled or not supported
   }
 
   return (

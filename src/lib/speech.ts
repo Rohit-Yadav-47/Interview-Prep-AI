@@ -9,8 +9,18 @@ export class SpeechHandler {
   private speechQueue: string[] = [];
   private isSpeaking = false;
   private speechEnqueued = false;
+  private lastRecognizedText = ''; // Track last recognized text to prevent duplicates
+  private recognitionTimeout: any = null; // For debouncing recognition restarts
+  private static instance: SpeechHandler | null = null; // Singleton instance
   
   constructor(onSpeechResult: (text: string) => void) {
+    // If an instance already exists, return it (singleton pattern)
+    if (SpeechHandler.instance) {
+      SpeechHandler.instance.onSpeechResult = onSpeechResult;
+      return SpeechHandler.instance;
+    }
+    
+    SpeechHandler.instance = this;
     this.onSpeechResult = onSpeechResult;
     this.synth = window.speechSynthesis;
     this.voices = [];
@@ -27,7 +37,12 @@ export class SpeechHandler {
         const result = event.results[event.results.length - 1];
         if (result.isFinal) {
           const text = result[0].transcript;
-          this.onSpeechResult(text);
+          
+          // Prevent duplicate recognition by comparing with last processed text
+          if (text !== this.lastRecognizedText) {
+            this.lastRecognizedText = text;
+            this.onSpeechResult(text);
+          }
         }
       };
       
@@ -46,22 +61,30 @@ export class SpeechHandler {
       
       // Handle end events to prevent auto-restart loops
       this.recognition.onend = () => {
+        // Clear any existing timeout to prevent multiple restarts
+        if (this.recognitionTimeout) {
+          clearTimeout(this.recognitionTimeout);
+          this.recognitionTimeout = null;
+        }
+        
         // Only restart if we're supposed to be listening and not paused
         if (this.isListening && !this.isPaused) {
-          try {
-            // Add delay to prevent rapid restart cycles
-            setTimeout(() => {
-              if (this.isListening && !this.isPaused) {
+          // Add delay to prevent rapid restart cycles and clear buffer
+          this.recognitionTimeout = setTimeout(() => {
+            if (this.isListening && !this.isPaused) {
+              try {
+                console.log("Restarting speech recognition...");
+                this.lastRecognizedText = ''; // Reset last text when restarting
                 this.recognition.start();
+              } catch (e) {
+                console.error('Error restarting recognition:', e);
+                this.isListening = false;
+                window.dispatchEvent(new CustomEvent('speech-listening-changed', { 
+                  detail: { isListening: false } 
+                }));
               }
-            }, 300);
-          } catch (e) {
-            console.error('Error restarting recognition:', e);
-            this.isListening = false;
-            window.dispatchEvent(new CustomEvent('speech-listening-changed', { 
-              detail: { isListening: false } 
-            }));
-          }
+            }
+          }, 500); // Longer delay to ensure proper cleanup
         }
       };
     }
@@ -72,6 +95,20 @@ export class SpeechHandler {
     } else {
       this.loadVoices();
     }
+  }
+  
+  // Get singleton instance
+  public static getInstance(onSpeechResult: (text: string) => void): SpeechHandler {
+    if (!SpeechHandler.instance) {
+      return new SpeechHandler(onSpeechResult);
+    }
+    
+    // Update the callback if provided
+    if (onSpeechResult) {
+      SpeechHandler.instance.onSpeechResult = onSpeechResult;
+    }
+    
+    return SpeechHandler.instance;
   }
   
   private loadVoices(): void {
@@ -144,6 +181,9 @@ export class SpeechHandler {
       // Clear any existing recognition state
       this.stopListening();
       
+      // Reset text tracking to avoid duplicates between sessions
+      this.lastRecognizedText = '';
+      
       // Short delay to ensure clean start
       setTimeout(() => {
         try {
@@ -156,7 +196,7 @@ export class SpeechHandler {
         } catch (e) {
           console.error('Error starting speech recognition:', e);
         }
-      }, 100);
+      }, 300);
     } catch (e) {
       console.error('Error starting speech recognition:', e);
     }
@@ -166,6 +206,12 @@ export class SpeechHandler {
     if (!this.recognition || !this.isListening) return;
     
     try {
+      // Cancel any pending restart
+      if (this.recognitionTimeout) {
+        clearTimeout(this.recognitionTimeout);
+        this.recognitionTimeout = null;
+      }
+      
       this.recognition.stop();
       this.isListening = false;
       this.isPaused = false;
@@ -181,6 +227,12 @@ export class SpeechHandler {
     if (!this.recognition || !this.isListening) return;
     
     try {
+      // Cancel any pending restart
+      if (this.recognitionTimeout) {
+        clearTimeout(this.recognitionTimeout);
+        this.recognitionTimeout = null;
+      }
+      
       this.recognition.stop();
       this.isPaused = true;
     } catch (e) {
@@ -193,6 +245,9 @@ export class SpeechHandler {
     
     if (this.isPaused) {
       try {
+        // Reset text tracking to avoid duplicates when resuming
+        this.lastRecognizedText = '';
+        
         this.recognition.start();
         this.isPaused = false;
       } catch (e) {
@@ -323,6 +378,16 @@ export class SpeechHandler {
       name: voice.name,
       lang: voice.lang
     }));
+  }
+
+  // Add a reset method to clear all state
+  public reset(): void {
+    this.stopListening();
+    this.synth.cancel();
+    this.speechQueue = [];
+    this.lastRecognizedText = '';
+    this.isSpeaking = false;
+    this.speechEnqueued = false;
   }
 }
 

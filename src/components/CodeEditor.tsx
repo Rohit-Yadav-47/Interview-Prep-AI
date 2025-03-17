@@ -109,14 +109,14 @@ export default function CodeEditor({
             whileTap={{ scale: 0.95 }}
             onClick={onSubmit}
             disabled={isLoading}
-            className={`px-10 py-3 rounded-lg relative group flex items-center justify-center gap-2 transition-all
+            className={`px-10 py-2 rounded-lg relative group flex items-center justify-center gap-2 transition-all
               ${darkMode 
                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500' 
                 : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500'
               } text-white font-medium shadow-glow hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0`}
           >
             <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-400/20 to-purple-500/20 animate-pulse-slow opacity-80 group-hover:opacity-100"></span>
-            <div className="flex items-center justify-center mb-6">
+            <div className="flex items-center justify-center mb-2">
               {isLoading ? (
                 <Loader size={18} className="animate-spin mr-2" />
               ) : (

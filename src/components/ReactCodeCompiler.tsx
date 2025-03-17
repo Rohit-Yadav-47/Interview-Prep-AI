@@ -397,10 +397,18 @@ const generateHTML = (reactCode: string): string => {
   `;
 };
 
-const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false }) => {
-  const [code, setCode] = useState<string>(TEMPLATES.counter);
+const ReactCodeCompiler: React.FC<{ 
+  darkMode?: boolean;
+  interviewComponent?: React.ReactNode;  // New prop to accept an interview component
+  enableSpeech?: boolean; // New prop to control speech functionality
+}> = ({ 
+  darkMode = false, 
+  interviewComponent,
+  enableSpeech = false
+}) => {
+  const [code, setCode] = useState<string>(TEMPLATES.editor);
   const [displayCode, setDisplayCode] = useState<string>(TEMPLATES.counter);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("counter");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("editor");
   const [error, setError] = useState<string | null>(null);
   const [formattedError, setFormattedError] = useState<string | null>(null);
   const [autoCompile, setAutoCompile] = useState<boolean>(true);
@@ -408,6 +416,7 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
   const [isSuccessToast, setIsSuccessToast] = useState<boolean>(true);
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [showInterview, setShowInterview] = useState<boolean>(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const compileTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastCompileTimeRef = useRef<number>(0);
@@ -584,6 +593,49 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
 
   return (
     <div className="flex flex-col w-full h-full mx-auto gap-4 text-gray-100">
+      {/* Keep interview component active but properly hidden for speech recognition 
+          Only render it with enableSpeech controls */}
+      {interviewComponent && !showInterview && (
+        <div 
+          aria-hidden="true" 
+          data-speech-enabled={enableSpeech ? 'true' : 'false'} // Add data attribute for debugging
+          style={{ 
+            position: 'absolute',
+            width: 0, 
+            height: 0,
+            overflow: 'hidden',
+            opacity: 0,
+            pointerEvents: 'none', 
+            visibility: 'hidden' 
+          }}
+        >
+          {interviewComponent}
+        </div>
+      )}
+      
+      {/* Interview floating toggle button - always visible when interview component exists */}
+      {interviewComponent && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <button
+            onClick={() => setShowInterview(!showInterview)}
+            className={`flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 ${
+              showInterview 
+                ? 'bg-purple-700 text-white hover:bg-purple-800' 
+                : 'bg-gray-800/80 backdrop-blur-sm text-gray-200 hover:bg-gray-700'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              {showInterview ? (
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              ) : (
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              )}
+            </svg>
+            <span>{showInterview ? "Hide Interview" : "Interview"}</span>
+          </button>
+        </div>
+      )}
+      
       {toastMessage && (
         <div className={`fixed top-6 right-6 max-w-sm ${isSuccessToast ? 'bg-gray-800 border-indigo-500' : 'bg-gray-800 border-red-500'} border-l-4 shadow-xl rounded-md p-4 z-50 transition-all duration-300`}>
           <div className="flex items-start">
@@ -606,7 +658,7 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
         </div>
       )}
 
-      <div className="flex justify-between items-center p-4">
+      <div className="flex justify-between items-center p-4 border-b border-gray-700/50">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">ReactLab</h1>
         <div className="flex gap-2">
           <button
@@ -638,84 +690,110 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 flex-grow">
-        <div className="w-full lg:w-1/2 border border-gray-700 rounded-lg bg-gray-850 shadow-lg overflow-hidden">
-          <div className="p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              </div>
-              <h3 className="font-medium text-gray-300 text-sm ml-2">editor.tsx</h3>
-            </div>
-            <div className="flex rounded-md overflow-hidden border border-gray-700">
-              {templateKeys.map((tab) => (
-                <button 
-                  key={tab}
-                  className={`px-3 py-1 text-xs transition-colors ${selectedTemplate === tab ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-750'}`}
-                  onClick={() => handleTemplateChange(tab)}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="relative">
-            <div className="absolute left-0 top-0 bottom-0 w-10 bg-gray-900 border-r border-gray-700 flex flex-col items-center pt-2 text-xs text-gray-500">
-              {Array.from({ length: 25 }, (_, i) => (
-                <div key={i} className="h-6 w-full text-center">{i + 1}</div>
-              ))}
-            </div>
-            <textarea
-              className="w-full h-[500px] p-4 pl-12 font-mono text-sm bg-gray-900 text-gray-300 focus:outline-none resize-none border-none"
-              value={code}
-              onChange={handleCodeChange}
-              onPaste={handlePaste}
-              spellCheck="false"
-              style={{ lineHeight: "1.5rem", tabSize: 2 }}
-            />
-          </div>
-        </div>
-        
-        <div className="w-full lg:w-1/2 border border-gray-700 rounded-lg bg-gray-850 shadow-lg overflow-hidden relative">
-          <div className="p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11.5 1a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 9.5a.5.5 0 11-1 0 .5.5 0 011 0zm-4.5.5a.5.5 0 100-1 .5.5 0 000 1zM10 15a 5 5 0 100-10 5 5 0 000 10z" clipRule="evenodd" />
-              </svg>
-              <h3 className="font-medium text-gray-300 text-sm">Live Preview</h3>
-            </div>
-            {isTyping && autoCompile && (
-              <div className="flex items-center gap-2 text-xs text-yellow-400 animate-pulse">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+      {/* New layout with improved interview panel */}
+      <div className="flex-grow flex flex-col relative">
+        {/* Interview panel (overlay when visible) */}
+        {interviewComponent && showInterview && (
+          <div className="absolute inset-0 z-40 bg-gray-900/95 backdrop-blur-sm overflow-hidden flex flex-col">
+            <div className="p-3 bg-purple-900/50 border-b border-purple-700/50 flex justify-between items-center sticky top-0">
+              <h3 className="text-lg text-purple-100 font-medium flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                Typing...
-              </div>
-            )}
-            {isCompiling && (
-              <div className="flex items-center gap-2 text-xs text-indigo-400 animate-pulse">
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                Interview Session
+              </h3>
+              <button 
+                onClick={() => setShowInterview(false)}
+                className="p-2 hover:bg-purple-800/50 rounded-full transition-all"
+              >
+                <svg className="w-5 h-5 text-purple-200" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
-                Compiling...
-              </div>
-            )}
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {interviewComponent}
+            </div>
           </div>
-          <div className="relative p-4 bg-gray-900 h-[500px]">
-            <iframe
-              ref={iframeRef}
-              title="React Preview"
-              className="w-full h-full border-none bg-gray-900"
-              sandbox="allow-scripts allow-same-origin"
-            />
-            {error && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/20 border border-red-800/30 rounded p-4 z-20 overflow-auto">
-                {  
-                  
-               
+        )}
+
+        {/* React code editor UI - simplified and cleaner */}
+        <div className="flex flex-col lg:flex-row gap-4 flex-grow h-full">
+          {/* Code editor panel */}
+          <div className="w-full lg:w-1/2 border border-gray-700 rounded-lg bg-gray-850 shadow-lg overflow-hidden">
+            <div className="p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+                <h3 className="font-medium text-gray-300 text-sm ml-2">editor.tsx</h3>
+              </div>
+              <div className="flex rounded-md overflow-hidden border border-gray-700">
+                {templateKeys.map((tab) => (
+                  <button 
+                    key={tab}
+                    className={`px-3 py-1 text-xs transition-colors ${selectedTemplate === tab ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-750'}`}
+                    onClick={() => handleTemplateChange(tab)}
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="relative">
+              <div className="absolute left-0 top-0 bottom-0 w-10 bg-gray-900 border-r border-gray-700 flex flex-col items-center pt-2 text-xs text-gray-500">
+                {Array.from({ length: 25 }, (_, i) => (
+                  <div key={i} className="h-6 w-full text-center">{i + 1}</div>
+                ))}
+              </div>
+              <textarea
+                className="w-full h-[500px] p-4 pl-12 font-mono text-sm bg-gray-900 text-gray-300 focus:outline-none resize-none border-none"
+                value={code}
+                onChange={handleCodeChange}
+                onPaste={handlePaste}
+                spellCheck="false"
+                style={{ lineHeight: "1.5rem", tabSize: 2 }}
+              />
+            </div>
+          </div>
+          
+          <div className="w-full lg:w-1/2 border border-gray-700 rounded-lg bg-gray-850 shadow-lg overflow-hidden relative">
+            <div className="p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11.5 1a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 9.5a.5.5 0 11-1 0 .5.5 0 011 0zm-4.5.5a.5.5 0 100-1 .5.5 0 000 1zM10 15a 5 5 0 100-10 5 5 0 000 10z" clipRule="evenodd" />
+                </svg>
+                <h3 className="font-medium text-gray-300 text-sm">Live Preview</h3>
+              </div>
+              {isTyping && autoCompile && (
+                <div className="flex items-center gap-2 text-xs text-yellow-400 animate-pulse">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Typing...
+                </div>
+              )}
+              {isCompiling && (
+                <div className="flex items-center gap-2 text-xs text-indigo-400 animate-pulse">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Compiling...
+                </div>
+              )}
+            </div>
+            <div className="relative p-4 bg-gray-900 h-[500px]">
+              <iframe
+                ref={iframeRef}
+                title="React Preview"
+                className="w-full h-full border-none bg-gray-900"
+                sandbox="allow-scripts allow-same-origin"
+              />
+              {error && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/20 border border-red-800/30 rounded p-4 z-20 overflow-auto">
                   <>
                     <div className="flex items-center gap-2 mb-3">
                       <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
@@ -725,26 +803,26 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
                     </div>
                     <pre className="whitespace-pre-wrap text-sm font-mono bg-gray-800/50 p-3 rounded border border-red-900/30 mb-4">{error}</pre>
                   </>
-                }
-                <div className="flex gap-3 mt-4">
-                  <button 
-                    onClick={copyError}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                  >
-                    Copy Error
-                  </button>
-                  <button 
-                    onClick={dismissError}
-                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
-                  >
-                    Dismiss
-                  </button>
+                  <div className="flex gap-3 mt-4">
+                    <button 
+                      onClick={copyError}
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                    >
+                      Copy Error
+                    </button>
+                    <button 
+                      onClick={dismissError}
+                      className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+            <div className="absolute top-0 left-0 w-16 h-16 bg-indigo-500/10 blur-xl rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 right-0 w-20 h-20 bg-purple-500/10 blur-xl rounded-full translate-x-1/2 translate-y-1/2"></div>
           </div>
-          <div className="absolute top-0 left-0 w-16 h-16 bg-indigo-500/10 blur-xl rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-20 h-20 bg-purple-500/10 blur-xl rounded-full translate-x-1/2 translate-y-1/2"></div>
         </div>
       </div>
     </div>
