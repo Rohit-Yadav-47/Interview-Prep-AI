@@ -19,7 +19,7 @@ const FrontendTest: React.FC<FrontendTestProps> = ({
   enableSpeech
 }) => {
   return (
-    <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl border border-blue-900/50 shadow-lg h-[calc(100vh-40px)] overflow-hidden">
+    <div className="bg-gray-900/80 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-blue-900/50 shadow-lg h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] overflow-hidden">
       <ReactCodeCompiler 
         darkMode={true} 
         enableSpeech={enableSpeech}
@@ -33,10 +33,12 @@ const FrontendTest: React.FC<FrontendTestProps> = ({
                 isProcessing={isProcessing}
                 darkMode={true}
                 enableSpeech={enableSpeech}
+                className="p-2 sm:p-4"
               />
             </div>
           </div>
         }
+        className="p-2 sm:p-4"
       />
     </div>
   );

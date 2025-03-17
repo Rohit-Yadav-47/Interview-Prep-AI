@@ -1,9 +1,17 @@
 import('dotenv').then(dotenv => dotenv.config());
 import { Groq } from "groq-sdk";
 
+// Get API key from environment variables - check both possible environment variable names
+const apiKey = import.meta.env.VITE_GROQ_API || import.meta.env.GROQ_API_KEY;
+
+// Validate API key exists before initializing client
+if (!apiKey) {
+  console.error('Error: No Groq API key found. Please set either VITE_GROQ_API or GROQ_API_KEY environment variable.');
+}
+
 // Initialize Groq client
 const client = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API, // Use environment variable for API key
+  apiKey: apiKey,
   dangerouslyAllowBrowser: true 
 });
 

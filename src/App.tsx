@@ -7,7 +7,8 @@ import {
   Terminal,
   Layout,
   Menu,
-  X
+  X,
+  Home as HomeIcon
 } from 'lucide-react';
 
 // Import page components
@@ -43,6 +44,19 @@ const Header = ({
 
   const isInterviewStarted = currentPage !== 'home';
   
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      const handleClickOutside = (e) => {
+        if (!e.target.closest('.mobile-menu-container') && !e.target.closest('.menu-button')) {
+          setIsMobileMenuOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMobileMenuOpen]);
+  
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
@@ -53,28 +67,79 @@ const Header = ({
   };
 
   return (
-    <header className="relative z-20 bg-black backdrop-blur-lg border-b border-blue-900/50 sticky top-0 shadow-xl">
-      <div className="max-w-[98%] xl:max-w-[95%] mx-auto px-4 py-4">
-        <div className="flex flex-row items-center justify-between">
+    <header className="relative z-20 bg-gradient-to-b from-black via-black/95 to-black/90 backdrop-blur-lg border-b border-blue-900/50 sticky top-0 shadow-xl">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
           
+          {/* Logo */}
           <div 
-            className="flex items-center gap-3 cursor-pointer" 
+            className="flex items-center gap-2.5 cursor-pointer group" 
             onClick={() => navigateTo('home')}
           >
             <div className="relative">
-              <div className="absolute inset-0 bg-blue-500 blur-md rounded-full animate-pulse"></div>
-              <Brain className="relative text-white z-10" size={32} />
+              <div className="absolute inset-0 bg-blue-500 blur-md rounded-full animate-pulse group-hover:bg-purple-500 transition-colors duration-300"></div>
+              <Brain className="relative text-white z-10" size={28} />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent group-hover:from-purple-400 group-hover:to-blue-500 transition-all duration-300">
               CodeSense AI
             </h1>
           </div>
           
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-4">
+            {currentPage !== 'home' && (
+              <button
+                onClick={() => navigateTo('home')}
+                className="text-gray-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-gray-800/50 transition-all duration-200 flex items-center gap-2"
+              >
+                <HomeIcon size={18} />
+                <span>Home</span>
+              </button>
+            )}
+            
+            <div className="flex rounded-lg overflow-hidden border border-gray-700/70 shadow-lg">
+              <button
+                onClick={() => navigateTo('coding-interview', 'coding')}
+                className={`px-3.5 py-2 flex items-center gap-2 transition-all duration-200 relative ${
+                  isInterviewStarted && interviewMode === 'coding'
+                    ? 'text-blue-100 font-medium bg-blue-600/70'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700/70'
+                }`}
+              >
+                <Terminal size={18} />
+                <span className="font-medium">Coding</span>
+                {isInterviewStarted && interviewMode === 'coding' && (
+                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-300 animate-pulse"></span>
+                )}
+              </button>
+              
+              <button
+                onClick={() => navigateTo('frontend-test', 'frontend')}
+                className={`px-3.5 py-2 flex items-center gap-2 transition-all duration-200 relative ${
+                  isInterviewStarted && interviewMode === 'frontend'
+                    ? 'text-green-100 font-medium bg-green-600/70'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700/70'
+                }`}
+              >
+                <Layout size={18} />
+                <span className="font-medium">Frontend</span>
+                {isInterviewStarted && interviewMode === 'frontend' && (
+                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse"></span>
+                )}
+              </button>
+            </div>
+            
+            {isInterviewStarted && (
+              <div className="ml-2 px-3 py-1.5 rounded-lg bg-gray-800/50 text-gray-300 flex items-center">
+                <span className="font-mono">{formatTime(timeRemaining)}</span>
+              </div>  
+            )}
+          </nav>
+          
           {/* Mobile Menu Button */}
           <button 
             onClick={toggleMobileMenu}
-            className="md:hidden flex items-center z-30"
-            aria-label="Toggle menu"
+            className="md:hidden flex items-center z-30 p-2 rounded-lg hover:bg-gray-800/70 transition-colors duration-200 menu-button"
           >
             {isMobileMenuOpen ? (
               <X size={24} className="text-gray-100" />
@@ -82,97 +147,59 @@ const Header = ({
               <Menu size={24} className="text-gray-100" />
             )}
           </button>
-          
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-3">
-            <div className="relative flex rounded-xl overflow-hidden border border-gray-700/50 shadow-lg backdrop-blur-sm">
-              <button
-                onClick={() => navigateTo('coding-interview', 'coding')}
-                aria-label="Interview Mode"
-                aria-current={isInterviewStarted && interviewMode === 'coding' ? 'page' : undefined}
-                className={`px-4 py-2.5 flex items-center gap-2.5 transition-all duration-300 relative
-                  ${isInterviewStarted && interviewMode === 'coding'
-                    ? 'text-blue-100 font-medium z-10'
-                    : 'text-gray-300 hover:text-white'
-                  }`}
-              >
-                <span className={`absolute inset-0 ${isInterviewStarted && interviewMode === 'coding' 
-                  ? 'bg-gradient-to-r from-blue-600/80 to-blue-500/60 opacity-100' 
-                  : 'bg-gray-800/60 hover:bg-gray-700/70 opacity-0 hover:opacity-100'} transition-all duration-300`}>
-                </span>
-                <Terminal size={18} className="relative z-10" />
-                <span className="font-medium relative z-10">Interview Mode</span>
-                {isInterviewStarted && interviewMode === 'coding' && (
-                  <span className="ml-1 w-2 h-2 rounded-full bg-blue-300 shadow-[0_0_8px_2px_rgba(59,130,246,0.5)] animate-pulse absolute top-2.5 right-2.5 z-10"></span>
-                )}
-              </button>
-              <div className="w-px h-8 bg-gray-100/50 self-center"></div>
-              <button
-                onClick={() => navigateTo('frontend-test', 'frontend')}
-                aria-label="Frontend Test"
-                aria-current={isInterviewStarted && interviewMode === 'frontend' ? 'page' : undefined}
-                className={`px-4 py-2.5 flex items-center gap-2.5 transition-all duration-300 relative
-                  ${isInterviewStarted && interviewMode === 'frontend'
-                    ? 'text-green-100 font-medium z-10' 
-                    : 'text-gray-300 hover:text-white'
-                  }`}
-              >
-                <span className={`absolute inset-0 ${isInterviewStarted && interviewMode === 'frontend' 
-                  ? 'bg-gradient-to-r from-green-600/80 to-green-500/60 opacity-100' 
-                  : 'bg-gray-800/60 hover:bg-gray-700/70 opacity-0 hover:opacity-100'} transition-all duration-300`}>
-                </span>
-                <Layout size={18} className="relative z-10" />
-                <span className="font-medium relative z-10">Frontend Test</span>
-                {isInterviewStarted && interviewMode === 'frontend' && (
-                  <span className="ml-1 w-2 h-2 rounded-full bg-green-300 shadow-[0_0_8px_2px_rgba(34,197,94,0.5)] animate-pulse absolute top-2.5 right-2.5 z-10"></span>
-                )}
-              </button>
-            </div>
-          </nav>
-          
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-20 md:hidden flex items-center justify-center">
-              <div className="flex flex-col items-center gap-6 p-6 w-full max-w-sm">
-                <button
-                  onClick={() => handleNavigation('coding-interview', 'coding')}
-                  className={`w-full px-4 py-5 flex items-center gap-3 justify-center rounded-xl transition-all duration-300 
-                    ${isInterviewStarted && interviewMode === 'coding'
-                      ? 'bg-gradient-to-r from-blue-600/80 to-blue-500/60 text-blue-100' 
-                      : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700 hover:text-white'
-                    }`}
-                >
-                  <Terminal size={22} />
-                  <span className="font-medium text-lg">Interview Mode</span>
-                  {isInterviewStarted && interviewMode === 'coding' && (
-                    <span className="ml-1 w-2 h-2 rounded-full bg-blue-300 shadow-[0_0_8px_2px_rgba(59,130,246,0.5)] animate-pulse"></span>
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => handleNavigation('frontend-test', 'frontend')}
-                  className={`w-full px-4 py-5 flex items-center gap-3 justify-center rounded-xl transition-all duration-300
-                    ${isInterviewStarted && interviewMode === 'frontend'
-                      ? 'bg-gradient-to-r from-green-600/80 to-green-500/60 text-green-100' 
-                      : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700 hover:text-white'
-                    }`}
-                >
-                  <Layout size={22} />
-                  <span className="font-medium text-lg">Frontend Test</span>
-                  {isInterviewStarted && interviewMode === 'frontend' && (
-                    <span className="ml-1 w-2 h-2 rounded-full bg-green-300 shadow-[0_0_8px_2px_rgba(34,197,94,0.5)] animate-pulse"></span>
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => handleNavigation('home')}
-                  className="w-full px-4 py-5 flex items-center gap-3 justify-center rounded-xl bg-gray-800/60 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-300"
-                >
-                  <span className="font-medium text-lg">Back Home</span>
-                </button>
-              </div>
-            </div>
-          )}
+        </div>
+      </div>
+      
+      {/* Mobile Menu - Slide from top animation */}
+      <div className={`fixed inset-x-0 top-0 md:hidden transition-transform duration-300 ease-in-out z-10 mobile-menu-container ${
+        isMobileMenuOpen ? 'translate-y-0' : '-translate-y-full'
+      }`}>
+        <div className="bg-gray-900/95 backdrop-blur-lg shadow-2xl border-b border-blue-800/30 pt-16 pb-4">
+          <div className="container mx-auto px-4 flex flex-col gap-2">
+            <button
+              onClick={() => handleNavigation('home')}
+              className={`w-full px-4 py-3 flex items-center gap-3 rounded-lg transition-all duration-200 ${
+                currentPage === 'home'
+                  ? 'bg-blue-600/20 text-blue-100 border border-blue-500/30'
+                  : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/70 hover:text-white'
+              }`}
+            >
+              <HomeIcon size={20} />
+              <span className="font-medium">Home</span>
+            </button>
+            
+            <button
+              onClick={() => handleNavigation('coding-interview', 'coding')}
+              className={`w-full px-4 py-3 flex items-center gap-3 rounded-lg transition-all duration-200 ${
+                isInterviewStarted && interviewMode === 'coding'
+                  ? 'bg-blue-600/20 text-blue-100 border border-blue-500/30'
+                  : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/70 hover:text-white'
+              }`}
+            >
+              <Terminal size={20} />
+              <span className="font-medium">Coding Interview</span>
+              {isInterviewStarted && interviewMode === 'coding' && (
+                <span className="ml-1 w-2 h-2 rounded-full bg-blue-300 animate-pulse"></span>
+              )}
+            </button>
+            
+            <button
+              onClick={() => handleNavigation('frontend-test', 'frontend')}
+              className={`w-full px-4 py-3 flex items-center gap-3 rounded-lg transition-all duration-200 ${
+                isInterviewStarted && interviewMode === 'frontend'
+                  ? 'bg-green-600/20 text-green-100 border border-green-500/30'
+                  : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/70 hover:text-white'
+              }`}
+            >
+              <Layout size={20} />
+              <span className="font-medium">Frontend Test</span>
+              {isInterviewStarted && interviewMode === 'frontend' && (
+                <span className="ml-1 w-2 h-2 rounded-full bg-green-300 animate-pulse"></span>
+              )}
+            </button>
+            
+           
+          </div>
         </div>
       </div>
     </header>
@@ -236,6 +263,11 @@ function App() {
     if (mode) {
       setInterviewMode(mode);
       setActiveSpeechMode(mode);
+    }
+    
+    // Reset time when starting a new interview
+    if ((page === 'coding-interview' || page === 'frontend-test') && messages.length === 0) {
+      setTimeRemaining(900);
     }
     
     // Reset messages when starting a new interview
@@ -394,16 +426,12 @@ function App() {
         navigateTo={navigateTo}
       />
       
-      <main className={`
-        flex-grow w-full relative z-10
-        max-w-full px-4 sm:px-6 py-4' '}
-      `}>
+      <main className="flex-grow w-full relative z-10 container mx-auto px-4 py-4 sm:py-6">
         {renderPage()}
       </main>
       <Footer />
     </div>
   ); 
-
-
 };
+
 export default App;
