@@ -169,7 +169,7 @@ const MainContent = ({
   activeSpeechMode,
 }) => {
   return (
-    <main className="flex-grow max-w-7xl  mx-auto px-4 sm:px-6 lg:px-8 sm:py-16 md:py-20 w-full relative z-10 ">
+    <main className="flex-grow max-w-7xl  mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2 w-full relative z-10 ">
       {!isInterviewStarted ? (
         <div className="flex items-center justify-center min-h-[500px]">
           <div className="bg-gray-900/80 backdrop-blur-lg rounded-2xl p-6 sm:p-8 max-w-3xl w-full text-center shadow-xl border border-blue-900/50">
@@ -202,9 +202,11 @@ const MainContent = ({
                 </ul>
                 <button 
                   onClick={() => startInterview('coding')}
-                  className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600/80 to-purple-600/80 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition shadow-lg hover:shadow-blue-500/20 flex items-center justify-center gap-2 relative"
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600/80 to-purple-600/80 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition shadow-lg hover:shadow-blue-500/20 flex items-center justify-center gap-2 relative overflow-hidden"
                 >
-                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-md opacity-0 hover:opacity-100 transition-opacity"></span>
+                  {/* Add a permanent subtle glow that gets enhanced on hover */}
+                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/10 to-purple-400/10 blur-md coding-button-bg"></span>
+                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-md opacity-20 hover:opacity-100 active:opacity-100 focus:opacity-100 transition-opacity duration-300"></span>
                   <Zap size={16} className="text-blue-200 relative z-10" />
                   <span className="relative z-10">Start Interview</span>
                 </button>
@@ -227,9 +229,11 @@ const MainContent = ({
                 </ul>
                 <button 
                   onClick={() => startInterview('frontend')}
-                  className="w-full px-4 py-2.5 bg-gradient-to-r from-green-600/80 to-teal-600/80 hover:from-green-500 hover:to-teal-500 text-white font-medium rounded-lg transition shadow-lg hover:shadow-green-500/20 flex items-center justify-center gap-2 relative"
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-green-600/80 to-teal-600/80 hover:from-green-500 hover:to-teal-500 text-white font-medium rounded-lg transition shadow-lg hover:shadow-green-500/20 flex items-center justify-center gap-2 relative overflow-hidden"
                 >
-                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-400/20 to-teal-400/20 blur-md opacity-0 hover:opacity-100 transition-opacity"></span>
+                  {/* Add a permanent subtle glow that gets enhanced on hover */}
+                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-400/10 to-teal-400/10 blur-md frontend-button-bg"></span>
+                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-400/20 to-teal-400/20 blur-md opacity-20 hover:opacity-100 active:opacity-100 focus:opacity-100 transition-opacity duration-300"></span>
                   <Code size={16} className="text-green-200 relative z-10" />
                   <span className="relative z-10">Launch React Playground</span>
                 </button>
@@ -412,7 +416,7 @@ function App() {
       setMessages((prev) => [
         ...prev,
         { role: 'user', content: `Submitted code:\n\`\`\`\n${code}\n\`\`\`` },
-        { role: 'assistant', content: `Code Analysis:\n\n${fullAnalysis}` },
+        { role: 'assistant', content: `\n\n${fullAnalysis}` },
       ]);
       setStreamingMessage(null);
     } catch (error) {
@@ -427,16 +431,34 @@ function App() {
   const startInterview = useCallback((mode: 'coding' | 'frontend') => {
     setIsInterviewStarted(true);
     setInterviewMode(mode);
-    // Set this mode as the active speech mode
     setActiveSpeechMode(mode);
-    // Reset timer or any additional state if needed
-    setTimeRemaining(900);
-    // Optionally, load a new question based on mode here
   }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 to-blue-950 transition-all duration-500 relative">
       <FloatingParticles />
+      <style jsx global>{`
+        /* Improved targeting for transition effects */
+        .interview-transition-coding .coding-button-bg {
+          opacity: 1 !important;
+          transform: scale(30) !important;
+          transition: all 0.3s ease-in-out;
+        }
+        
+        .interview-transition-frontend .frontend-button-bg {
+          opacity: 1 !important;
+          transform: scale(30) !important;
+          transition: all 0.3s ease-in-out;
+        }
+        
+        @keyframes buttonPulse {
+          0% { opacity: 0.2; }
+          50% { opacity: 0.4; }
+          100% { opacity: 0.2; }
+        }
+      `}</style>
+      
+      {/* Rest of the component remains the same */}
       <Header
         isInterviewStarted={isInterviewStarted}
         interviewMode={interviewMode}

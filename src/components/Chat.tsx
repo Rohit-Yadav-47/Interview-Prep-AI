@@ -295,7 +295,7 @@ export default function Chat({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="mt-4 sm:mt-8 text-center px-4"
+              className="mt-4 sm:mt-8 text-center px-4 w-full flex flex-col items-center"
             >
               <p className="text-base sm:text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-cyan-200">
                 Begin Your Interview
@@ -307,8 +307,8 @@ export default function Chat({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={startInterview}
-                className={`mt-3 sm:mt-6 px-3 sm:px-6 py-2 sm:py-3 rounded-full relative group flex items-center justify-center gap-2
-                  bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 shadow-blue-500/20 shadow-lg hover:shadow-xl transition-all text-xs sm:text-base`}
+                className="mt-3 sm:mt-6 px-4 sm:px-8 py-2 sm:py-3 rounded-full relative group flex items-center justify-center gap-2 mx-auto
+                  bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 shadow-blue-500/20 shadow-lg hover:shadow-xl transition-all text-xs sm:text-base"
               >
                 <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400/20 to-indigo-500/20 animate-pulse-slow opacity-80 group-hover:opacity-100"></span>
                 <PlayCircle size={16} className="sm:hidden" />
@@ -484,27 +484,79 @@ export default function Chat({
         }
         
         /* Mobile-optimized styles */
+        .typing-indicator {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 8px 0;
+          margin-top: 6px;
+        }
+        
         .typing-indicator span {
+          display: inline-block;
           height: 6px;
           width: 6px;
-          margin: 0 1px;
+          margin: 0 2px;
+          background-color: rgba(255, 255, 255, 0.6);
+          border-radius: 50%;
+          animation: typing 1.4s infinite ease-in-out both;
         }
+        
+        .typing-indicator span:nth-child(1) {
+          animation-delay: -0.32s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+          animation-delay: -0.16s;
+        }
+        
+        @keyframes typing {
+          0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+          40% { transform: scale(1); opacity: 1; }
+        }
+        
         @media (min-width: 640px) {
           .typing-indicator span {
             height: 8px;
             width: 8px;
+            margin: 0 3px;
+          }
+          .typing-indicator {
+            padding: 10px 0;
+            margin-top: 8px;
           }
         }
         
         /* Responsive prose adjustments */
         .prose pre {
           font-size: 0.75rem;
-          padding: 0.5rem;
+          padding: 0.75rem;
+          margin: 0.5rem auto;
+          text-align: left;
+          max-width: 100%;
+          overflow-x: auto;
+          border-radius: 0.5rem;
         }
+        
+        .prose code {
+          text-align: left;
+          display: inline-block;
+        }
+        
+        .prose p {
+          text-align: left;
+          margin: 0.75rem 0;
+        }
+        
         @media (min-width: 640px) {
           .prose pre {
             font-size: 0.875rem;
             padding: 1rem;
+            margin: 0.75rem auto;
+            border-radius: 0.75rem;
+          }
+          .prose p {
+            margin: 1rem 0;
           }
         }
       `}</style>
