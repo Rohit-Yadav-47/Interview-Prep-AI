@@ -9,7 +9,6 @@ interface CodeEditorProps {
   code: string;
   onCodeChange: (value: string) => void;
   onSubmit: () => void;
-  timeRemaining: number;
   darkMode: boolean;
   isLoading?: boolean;
   isInterviewStarted?: boolean;
@@ -20,7 +19,6 @@ export default function CodeEditor({
   code,
   onCodeChange,
   onSubmit,
-  timeRemaining,
   darkMode,
   isLoading = false,
   isInterviewStarted = false,
@@ -42,7 +40,7 @@ export default function CodeEditor({
     if (isInterviewStarted) {
       return (
         <p className="italic text-indigo-100/80">
-          The interviewer will present a coding challenge soon. You can start typing code in the editor below to prepare.
+          The interviewer will present a coding challenge soon. You can start typing code in the editor.
         </p>
       );
     }
@@ -116,7 +114,7 @@ export default function CodeEditor({
               } text-white font-medium shadow-glow hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0`}
           >
             <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-400/20 to-purple-500/20 animate-pulse-slow opacity-80 group-hover:opacity-100"></span>
-            <div className="flex items-center justify-center mb-2">
+            <div className="flex items-center justify-center ">
               {isLoading ? (
                 <Loader size={18} className="animate-spin mr-2" />
               ) : (

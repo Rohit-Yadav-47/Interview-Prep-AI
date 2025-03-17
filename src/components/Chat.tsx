@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Phone, PhoneOff, Mic, Settings, Maximize, X, Share2, PlayCircle } from 'lucide-react';
+import { Send, Phone, PhoneOff, Mic, Maximize, X, Share2, PlayCircle, RefreshCw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import VoiceControl from './VoiceControl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +12,7 @@ interface ChatProps {
   isProcessing: boolean;
   darkMode: boolean;
   enableSpeech?: boolean;
+  onResetChat?: () => void;
 }
 
 export default function Chat({ 
@@ -20,7 +21,8 @@ export default function Chat({
   onSendMessage, 
   isProcessing,
   darkMode,
-  enableSpeech = true
+  enableSpeech = true,
+  onResetChat
 }: ChatProps) {
   const [input, setInput] = useState('');
   const [isCallMode, setIsCallMode] = useState(false);
@@ -157,10 +159,19 @@ export default function Chat({
     return "";
   }, [isCallMode, isSpeaking, processTextForSpeech]);
 
+  // Modify the handleReset function to simply reload the page
+  const handleReset = useCallback(() => {
+    // Ask for confirmation before reloading
+    if (window.confirm("Are you sure you want to reset the chat? This will reload the page.")) {
+      console.log("RESET: Reloading page");
+      window.location.reload();
+    }
+  }, []);
+
   return (
     <div 
       ref={containerRef}
-      className="flex flex-col  relative perspective-1000 overflow-hidden"
+      className="flex flex-col h-full relative perspective-1000 overflow-hidden"
     >
       {/* Animated Background */}
       <div className={`fixed inset-0 bg-grid z-0 ${darkMode ? 'bg-grid-dark' : 'bg-grid-light'} `}>
@@ -172,7 +183,7 @@ export default function Chat({
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className={`relative z-10 backdrop-blur-md bg-opacity-70 ${darkMode ? 'bg-indigo-900/40' : 'bg-blue-600/40'} text-white p-2 sm:p-4 rounded-b-lg sm:rounded-b-2xl  shadow-neon`}
+        className={`relative z-10 backdrop-blur-md bg-opacity-70 ${darkMode ? 'bg-indigo-900/40' : 'bg-blue-600/40'} text-white p-2 sm:p-4 rounded-b-lg sm:rounded-b-2xl shadow-neon flex-shrink-0`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 sm:space-x-4">
@@ -193,6 +204,20 @@ export default function Chat({
             </div>
           </div>
           <div className="flex items-center space-x-1 sm:space-x-3">
+            {/* Always show Reset button but make it reload the page */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleReset}
+              className="relative z-30 flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full 
+                bg-gradient-to-r from-red-500 to-orange-500 hover:shadow-glow cursor-pointer
+                transition-all duration-300 text-xs sm:text-sm"
+            >
+              <RefreshCw size={12} className="sm:hidden" />
+              <RefreshCw size={14} className="hidden sm:block" />
+              <span>Reset</span>
+            </motion.button>
+            
             {enableSpeech && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -211,15 +236,7 @@ export default function Chat({
                 )}
               </motion.button>
             )}
-            <motion.button 
-              whileHover={{ rotate: 180 }}
-              transition={{ duration: 0.5 }}
-              onClick={() => setShowControls(!showControls)}
-              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-all"
-            >
-              <Settings size={14} className="sm:hidden" />
-              <Settings size={16} className="hidden sm:block" />
-            </motion.button>
+           
           </div>
         </div>
         {isCallMode && (
@@ -239,44 +256,12 @@ export default function Chat({
         )}
       </motion.div>
       
-      {/* Floating Controls Menu - Mobile optimized */}
-      <AnimatePresence>
-        {showControls && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -20 }}
-            className="absolute top-16 sm:top-20 right-2 sm:right-4 z-50 backdrop-blur-xl bg-white/10 dark:bg-black/30 rounded-xl shadow-neon p-2 sm:p-3 border border-white/20"
-          >
-            <div className="flex flex-col space-y-1 sm:space-y-2 min-w-[140px] sm:min-w-[180px]">
-              <button className="flex items-center space-x-2 p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-all text-xs sm:text-sm text-white">
-                <Share2 size={14} className="sm:hidden" />
-                <Share2 size={16} className="hidden sm:block" />
-                <span>Share Conversation</span>
-              </button>
-              <button className="flex items-center space-x-2 p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-all text-xs sm:text-sm text-white">
-                <Maximize size={14} className="sm:hidden" />
-                <Maximize size={16} className="hidden sm:block" />
-                <span>Expand View</span>
-              </button>
-              <div className="border-t border-white/10 my-1"></div>
-              <button 
-                onClick={() => setShowControls(false)} 
-                className="flex items-center space-x-2 p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-all text-xs sm:text-sm text-white"
-              >
-                <X size={14} className="sm:hidden" />
-                <X size={16} className="hidden sm:block" />
-                <span>Close Menu</span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+     
 
       {/* Messages Container - Mobile optimized */}
       <div 
         ref={messagesContainerRef}
-        className={`flex-1 ${messages.length === 0 && !streamingMessage ? 'overflow-hidden' : 'overflow-y-auto'} p-3 sm:p-6 space-y-3 sm:space-y-6 z-10  relative ${darkMode ? 'bg-gradient-mesh-dark' : 'bg-gradient-mesh-light'} `}
+        className={`flex-1 ${messages.length === 0 && !streamingMessage ? 'overflow-hidden' : 'overflow-y-auto'} p-3 sm:p-6 space-y-3 sm:space-y-6 z-10 relative ${darkMode ? 'bg-gradient-mesh-dark' : 'bg-gradient-mesh-light'}`}
       >
         {messages.length === 0 && !streamingMessage && (
           <div className="flex flex-col items-center justify-center h-full">
@@ -400,7 +385,7 @@ export default function Chat({
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ delay: 0.3 }}
-        className="relative z-20 p-2 sm:p-4 bg-transparent"
+        className="relative z-20 p-2 sm:p-4 bg-transparent flex-shrink-0"
       >
         {isCallMode && (
           <div className="flex items-center justify-center mb-2 sm:mb-4">
@@ -558,6 +543,38 @@ export default function Chat({
           .prose p {
             margin: 1rem 0;
           }
+        }
+
+        /* Additional styles for full height */
+        .flex-col {
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .h-full {
+          height: 100%;
+        }
+        
+        .flex-1 {
+          flex: 1 1 0%;
+        }
+        
+        .flex-shrink-0 {
+          flex-shrink: 0;
+        }
+        
+        .overflow-y-auto {
+          overflow-y: auto;
+        }
+
+        /* Reset animation */
+        @keyframes flash-reset {
+          0%, 100% { background-color: transparent; }
+          50% { background-color: rgba(251, 146, 60, 0.2); }
+        }
+        
+        .flash-reset {
+          animation: flash-reset 0.8s ease-out;
         }
       `}</style>
     </div>

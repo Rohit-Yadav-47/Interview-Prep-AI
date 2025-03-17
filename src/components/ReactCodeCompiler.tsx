@@ -619,7 +619,7 @@ const ReactCodeCompiler: React.FC<{
   const templateKeys = Object.keys(TEMPLATES);
 
   return (
-    <div className="flex flex-col w-full h-full mx-auto gap-4 text-gray-100 overflow-hidden">
+    <div className="flex flex-col w-full h-[calc(100vh-8rem)] mx-auto text-gray-100 overflow-hidden">
       {/* Keep interview component active but properly hidden for speech recognition */}
       {interviewComponent && !showInterview && (
         <div
@@ -639,9 +639,9 @@ const ReactCodeCompiler: React.FC<{
         </div>
       )}
 
-      {/* Interview floating toggle button - improved position and visibility for mobile */}
+      {/* Interview floating toggle button */}
       {interviewComponent && (
-        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50">
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2">
           <button
             onClick={() => setShowInterview(!showInterview)}
             className={`flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 ${
@@ -722,11 +722,18 @@ const ReactCodeCompiler: React.FC<{
         </div>
       )}
 
-      <div className="flex justify-between items-center p-4 border-b border-gray-700/50">
-        <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          ReactLab
-        </h1>
-        <div className="flex gap-2">
+      {/* Top control bar - styled similar to CodingInterview */}
+      <div className="flex justify-between px-4 py-3 border-b border-gray-700/50 bg-gray-800/80 backdrop-blur-md rounded-t-lg shadow-lg">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center shadow-glow">
+            <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <h3 className="font-medium text-gray-100 text-lg">React Playground</h3>
+        </div>
+        
+        <div className="flex items-center gap-2">
           <button
             className={`text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-md transition-all duration-200 ${
               autoCompile
@@ -750,7 +757,10 @@ const ReactCodeCompiler: React.FC<{
           {!autoCompile && (
             <button
               className="text-xs sm:text-sm px-3 sm:px-4 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center gap-1"
-              onClick={handleCompile}
+              onClick={() => {
+                setDisplayCode(code);
+                lastCompileTimeRef.current = Date.now();
+              }}
             >
               <svg
                 className="w-4 h-4"
@@ -777,34 +787,36 @@ const ReactCodeCompiler: React.FC<{
         </div>
       </div>
 
-      {/* New layout with improved interview panel and mobile support */}
-      <div className="flex-grow flex flex-col relative">
+      {/* Main content area - matched with CodingInterview height */}
+      <div className="flex-1 flex flex-col relative overflow-hidden pb-4">
         {interviewComponent && showInterview && (
-          <div className="fixed top-0 left-0 right-0 z-50">
-            <div className="relative bg-gray-900/95 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50">
+            <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm p-2 overflow-auto">
               <button
                 onClick={() => setShowInterview(false)}
                 className="absolute top-2 right-4 text-gray-300 hover:text-gray-100 text-xl"
               >
                 &times;
               </button>
-              {interviewComponent}
+              <div className="pt-8 px-2 h-full max-h-[calc(100vh-20px)] overflow-y-auto">
+                {interviewComponent}
+              </div>
             </div>
           </div>
         )}
 
-        {/* React code editor UI - simplified and mobile optimized */}
-        <div className="flex flex-col lg:flex-row gap-4 flex-grow h-full">
+        {/* React code editor UI - enhanced to match CodingInterview size and style */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full w-full p-4">
           {/* Code editor panel */}
-          <div className="w-full lg:w-1/2 border border-gray-700 rounded-lg bg-gray-850 shadow-lg overflow-hidden">
-            <div className="p-2 sm:p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+          <div className="bg-gray-900/90 backdrop-blur-lg rounded-xl overflow-hidden border border-blue-900/60 shadow-2xl">
+            <div className="p-2 border-b border-gray-700/50 bg-gray-800/80 flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <div className="hidden sm:flex gap-1.5">
+                <div className="flex gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-red-500"></div>
                   <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
                 </div>
-                <h3 className="font-medium text-gray-300 text-xs sm:text-sm ml-0 sm:ml-2">
+                <h3 className="font-medium text-gray-300 text-sm ml-2">
                   editor.tsx
                 </h3>
               </div>
@@ -812,7 +824,7 @@ const ReactCodeCompiler: React.FC<{
                 {templateKeys.map((tab) => (
                   <button
                     key={tab}
-                    className={`px-2 sm:px-3 py-1 text-xs transition-colors ${
+                    className={`px-3 py-1 text-xs transition-colors ${
                       selectedTemplate === tab
                         ? "bg-indigo-600 text-white"
                         : "bg-gray-800 text-gray-400 hover:bg-gray-750"
@@ -824,19 +836,19 @@ const ReactCodeCompiler: React.FC<{
                 ))}
               </div>
             </div>
-            <div className="relative">
-              <div className="absolute left-0 top-0 bottom-0 w-6 sm:w-10 bg-gray-900 border-r border-gray-700 flex flex-col items-center pt-2 text-xs text-gray-500">
+            <div className="relative h-full">
+              <div className="absolute left-0 top-0 bottom-0 w-10 bg-gray-900 border-r border-gray-700 flex flex-col items-center pt-2 text-xs text-gray-500">
                 {Array.from({ length: 25 }, (_, i) => (
                   <div
                     key={i}
-                    className="h-6 w-full text-center text-[10px] sm:text-xs"
+                    className="h-6 w-full text-center text-xs"
                   >
                     {i + 1}
                   </div>
                 ))}
               </div>
               <textarea
-                className="w-full h-[300px] sm:h-[400px] md:h-[500px] p-2 sm:p-4 pl-8 sm:pl-12 font-mono text-sm bg-gray-900 text-gray-300 focus:outline-none resize-none border-none"
+                className="w-full h-[calc(100vh-15rem)] p-2 pl-12 font-mono text-sm bg-gray-900 text-gray-300 focus:outline-none resize-none border-none"
                 value={code}
                 onChange={handleCodeChange}
                 onPaste={handlePaste}
@@ -846,116 +858,67 @@ const ReactCodeCompiler: React.FC<{
             </div>
           </div>
 
-          <div className="w-full lg:w-1/2 border border-gray-700 rounded-lg bg-gray-850 shadow-lg overflow-hidden relative">
-            <div className="p-2 sm:p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+          {/* Preview panel */}
+          <div className="bg-gray-900/90 backdrop-blur-lg rounded-xl overflow-hidden border border-blue-900/60 shadow-2xl relative">
+            <div className="p-2 border-b border-gray-700/50 bg-gray-800/80 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <svg
-                  className="w-4 h-4 text-indigo-400"
+                  className="w-5 h-5 text-teal-400"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
                   <path
                     fillRule="evenodd"
-                    d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11.5 1a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 9.5a.5.5 0 11-1 0 .5.5 0 011 0zm-4.5.5a.5.5 0 100-1 .5.5 0 000 1zM10 15a 5 5 0 100-10 5 5 0 000 10z"
+                    d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11.5 1a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 9.5a.5.5 0 11-1 0 .5.5 0 011 0zm-4.5.5a.5.5 0 100-1 .5.5 0 000 1z"
                     clipRule="evenodd"
                   />
                 </svg>
-                <h3 className="font-medium text-gray-300 text-xs sm:text-sm">
+                <h3 className="font-medium text-gray-300 text-sm">
                   Live Preview
                 </h3>
               </div>
-              {isTyping && autoCompile && (
-                <div className="flex items-center gap-1 sm:gap-2 text-xs text-yellow-400 animate-pulse">
-                  <svg
-                    className="w-3 h-3 sm:w-4 sm:h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
-                  </svg>
-                  <span className="text-[10px] sm:text-xs">Typing...</span>
-                </div>
-              )}
+              
               {isCompiling && (
-                <div className="flex items-center gap-1 sm:gap-2 text-xs text-indigo-400 animate-pulse">
-                  <svg
-                    className="w-3 h-3 sm:w-4 sm:h-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  <span className="text-[10px] sm:text-xs">Compiling...</span>
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+                  <span className="text-xs text-indigo-300">Compiling...</span>
                 </div>
               )}
             </div>
-            <div className="relative p-2 sm:p-4 bg-gray-900 h-[300px] sm:h-[400px] md:h-[500px]">
+            <div className="relative p-1 bg-gray-900 h-[calc(100vh-15rem)]">
               <iframe
                 ref={iframeRef}
                 title="React Preview"
                 className="w-full h-full border-none bg-gray-900"
                 sandbox="allow-scripts allow-same-origin"
               />
-              {error && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/20 border border-red-800/30 rounded p-2 sm:p-4 z-20 overflow-auto">
-                  <>
-                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                      <svg
-                        className="w-5 h-5 sm:w-6 sm:h-6 text-red-500"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <strong className="text-red-300 text-base sm:text-lg">
-                        Compilation Error
-                      </strong>
+              {error && !formattedError && (
+                <div className="absolute inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center">
+                  <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 max-w-md mx-auto text-red-300">
+                    <h4 className="font-bold mb-2">Compilation Error</h4>
+                    <pre className="whitespace-pre-wrap text-sm">{error}</pre>
+                    <div className="flex gap-2 mt-4">
+                      <button onClick={copyError} className="text-xs text-blue-400 hover:text-blue-300">Copy Error</button>
+                      <button onClick={dismissError} className="text-xs text-blue-400 hover:text-blue-300">Dismiss</button>
                     </div>
-                    <pre className="whitespace-pre-wrap text-xs sm:text-sm font-mono bg-gray-800/50 p-2 sm:p-3 rounded border border-red-900/30 mb-2 sm:mb-4 max-h-[200px] overflow-y-auto">
-                      {error}
-                    </pre>
-                  </>
-                  <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-4">
-                    <button
-                      onClick={copyError}
-                      className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                    >
-                      Copy Error
-                    </button>
-                    <button
-                      onClick={dismissError}
-                      className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
-                    >
-                      Dismiss
-                    </button>
+                  </div>
+                </div>
+              )}
+              {formattedError && (
+                <div className="absolute inset-0 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-auto">
+                  <div className="max-h-full overflow-auto w-full max-w-2xl">
+                    <div dangerouslySetInnerHTML={{ __html: formattedError }} />
+                    <div className="flex justify-end mt-4">
+                      <button onClick={dismissError} className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Dismiss</button>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-            <div className="absolute top-0 left-0 w-16 h-16 bg-indigo-500/10 blur-xl rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-20 h-20 bg-purple-500/10 blur-xl rounded-full translate-x-1/2 translate-y-1/2"></div>
+            
+            {/* Decorative elements */}
+            <div className="absolute top-0 left-0 w-16 h-16 bg-teal-500/10 blur-xl rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 right-0 w-20 h-20 bg-indigo-500/10 blur-xl rounded-full translate-x-1/2 translate-y-1/2"></div>
           </div>
         </div>
       </div>

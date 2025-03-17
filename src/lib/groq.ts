@@ -2,7 +2,7 @@ import { Groq } from "groq-sdk";
 
 // Initialize Groq client
 const client = new Groq({
-  apiKey: "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", // Replace with your actual Groq API key or use environment variable
+  apiKey: process.env.GROQ_API, // Replace with your actual Groq API key or use environment variable
   dangerouslyAllowBrowser: true 
 });
 

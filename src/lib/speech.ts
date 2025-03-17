@@ -116,9 +116,11 @@ export class SpeechHandler {
     
     // First priority: High-quality neural female voices with expanded keywords
     const neuralKeywords = ['neural', 'premium', 'enhanced', 'wavenet', 'natural', 'studio', 
-                           'realistic', 'plus', 'professional', 'ultra', 'advanced', 'hd'];
-    const femaleIdentifiers = ['female', 'woman', 'girl', 'samantha', 'karen', 'allison', 
-                              'lisa', 'victoria', 'zira', 'siri', 'alexa', 'madison', 'emma'];
+                           'realistic', 'plus', 'professional', 'ultra', 'advanced', 'hd', 
+                           'high quality', 'clear', 'refined', 'expressive', 'nuance', 'lifelike'];
+    const femaleIdentifiers = ['female', 'woman', 'girl', 'samantha', 'karen', 'allison', 'amy', 
+                              'lisa', 'victoria', 'zira', 'siri', 'alexa', 'madison', 'emma', 
+                              'joanna', 'olivia', 'nicole', 'jennifer', 'kate', 'heather', 'sophia'];
     
     // First pass: Look for explicitly high-quality neural female voices
     this.preferredVoice = this.voices.find(voice => 
@@ -127,9 +129,9 @@ export class SpeechHandler {
       neuralKeywords.some(keyword => voice.name.toLowerCase().includes(keyword))
     );
     
-    // Second pass: Look for Google, Microsoft or Apple premium female voices
+    // Second pass: Look for top-tier providers with premium female voices
     if (!this.preferredVoice) {
-      const premiumProviders = ['google', 'microsoft', 'apple'];
+      const premiumProviders = ['google', 'microsoft', 'apple', 'amazon', 'nuance', 'ibm', 'deepmind'];
       this.preferredVoice = this.voices.find(voice => 
         femaleIdentifiers.some(term => voice.name.toLowerCase().includes(term)) && 
         (voice.lang.includes('en-US') || voice.lang.includes('en-GB') || voice.lang.includes('en-AU')) &&
@@ -275,18 +277,28 @@ export class SpeechHandler {
       utterance.voice = this.preferredVoice;
     }
     
-    // Better speech parameters for a more natural, realistic female voice
-    utterance.rate = 0.95;   // Slightly slower for clarity but not too slow
-    utterance.pitch = 1.05;  // Slightly higher pitch for female voices
-    utterance.volume = 1.0;  // Full volume
+    // Enhanced speech parameters for a more realistic female voice
+    utterance.rate = 0.98;    // Slightly slower but more natural
+    utterance.pitch = 1.02;   // More subtle pitch adjustment for realism
+    utterance.volume = 1.0;   // Full volume
     
-    // Add proper pauses for more natural speech cadence
-    if (textToSpeak.length > 80) {
-      // Add subtle breaks between sentences for more natural delivery
-      textToSpeak = textToSpeak.replace(/\. /g, '. , ');
-      textToSpeak = textToSpeak.replace(/! /g, '! , ');
-      textToSpeak = textToSpeak.replace(/\? /g, '? , ');
+    // Advanced text processing for more natural speech patterns
+    if (textToSpeak.length > 50) {
+      // Add subtle breaks for more natural delivery
+      textToSpeak = textToSpeak.replace(/\. /g, '... ');
+      textToSpeak = textToSpeak.replace(/! /g, '!... ');
+      textToSpeak = textToSpeak.replace(/\? /g, '?... ');
+      textToSpeak = textToSpeak.replace(/; /g, ';.. ');
+      textToSpeak = textToSpeak.replace(/: /g, ':.. ');
+      
+      // Add micro-pauses between clauses for a more human-like cadence
+      textToSpeak = textToSpeak.replace(/, /g, ',.. ');
+      
+      // Improve stress patterns for key phrase boundaries
+      textToSpeak = textToSpeak.replace(/(\w+)(\s*[-–]\s*)/g, '$1... $2');
     }
+    
+    utterance.text = textToSpeak;
     
     utterance.onend = () => {
       this.isSpeaking = false;

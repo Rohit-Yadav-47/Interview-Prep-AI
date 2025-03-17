@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+ @keyframes float-slow {
+  0% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-10px) translateX(5px); }
+  100% { transform: translateY(0) translateX(0); }
+}
+@keyframes float-medium {
+ 0% { transform: translateY(0) translateX(0); }
+ 50% { transform: translateY(-15px) translateX(-5px); }
+  100% { transform: translateY(0) translateX(0); }
+ }
+ @keyframes float-fast {
+   0% { transform: translateY(0) translateX(0); }
+      50% { transform: translateY(-8px) translateX(8px); }
+   100% { transform: translateY(0) translateX(0); }
+}
 /* Animation utilities */
 @layer utilities {
   .animate-float {
