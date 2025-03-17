@@ -1,7 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// Default sample code
-const DEFAULT_CODE = `function App() {
+const TEMPLATES: Record<string, string> = {
+  editor: `// Start writing your React component here...
+function App() {
+  return (
+    <div className="p-6 text-gray-100">
+      <h2 className="text-xl font-bold">Welcome to your Editor!</h2>
+      <p>Start coding your component...</p>
+    </div>
+  );
+}`,
+  counter: `function App() {
   const [count, setCount] = useState(0);
   
   return (
@@ -16,11 +25,7 @@ const DEFAULT_CODE = `function App() {
       </button>
     </div>
   );
-}`;
-
-// Sample templates
-const TEMPLATES = {
-  counter: DEFAULT_CODE,
+}`,
   todoList: `function App() {
   const [todos, setTodos] = useState([
     { id: 1, text: 'Learn React', completed: false },
@@ -102,13 +107,10 @@ const TEMPLATES = {
     async function fetchData() {
       try {
         setLoading(true);
-        // This is a placeholder URL - it returns mock data
         const response = await fetch('https://jsonplaceholder.typicode.com/posts/1');
-        
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        
         const result = await response.json();
         setData(result);
         setError(null);
@@ -119,7 +121,6 @@ const TEMPLATES = {
         setLoading(false);
       }
     }
-
     fetchData();
   }, []);
 
@@ -143,210 +144,38 @@ const TEMPLATES = {
       ) : null}
     </div>
   );
-}`,
-  reactEmail: `function App() {
-  return (
-    <Html>
-      <Head />
-      <Preview>Welcome to our platform!</Preview>
-      <Tailwind>
-        <Body className="bg-gray-900 my-auto mx-auto font-sans">
-          <Container className="border border-gray-700 rounded my-8 mx-auto p-5 max-w-md bg-gray-800">
-            <Img
-              src="https://react.email/static/icons/react.png"
-              width="50"
-              height="50"
-              alt="React Email"
-              className="mx-auto my-4"
-            />
-            <Heading className="text-2xl font-bold text-center text-gray-100">
-              Welcome to React Email
-            </Heading>
-            <Text className="text-gray-300 my-4">
-              This is a simple email template built with React Email and Tailwind CSS.
-              You can customize it to suit your needs.
-            </Text>
-            <Section className="text-center">
-              <Button
-                href="https://example.com"
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-              >
-                Get Started
-              </Button>
-            </Section>
-            <Text className="text-sm text-gray-400 text-center mt-8">
-              © 2023 React Email. All rights reserved.
-              <br />
-              <Link href="https://example.com/unsubscribe" className="text-indigo-400 hover:underline">
-                Unsubscribe
-              </Link>
-            </Text>
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
-  );
-}`,
-  loginEmail: `// Current date for the login timestamp
-const currentDate = new Date().toLocaleString('en-US', {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
-  timeZoneName: 'short',
-});
-
-function App() {
-  return (
-    <Html>
-      <Head />
-      <Preview>Successful login to your account</Preview>
-      <Tailwind>
-        <Body className="bg-gray-900 font-sans">
-          <Container className="mx-auto my-8 max-w-md rounded-lg bg-gray-800 p-5 border border-gray-700">
-            {/* Header with Logo */}
-            <Section className="mt-8 text-center">
-              <Img
-                src="https://picsum.photos/600/100"
-                alt="Company Logo"
-                width="180"
-                height="40"
-                className="mx-auto"
-              />
-            </Section>
-
-            {/* Main Content */}
-            <Section className="mt-8">
-              <Heading className="text-2xl font-bold text-gray-100">
-                Login Confirmed
-              </Heading>
-              <Text className="text-base leading-6 text-gray-300">
-                Hey there,
-              </Text>
-              <Text className="text-base leading-6 text-gray-300">
-                We detected a new login to your account. If this was you, no action is needed.
-              </Text>
-
-              {/* Login Details */}
-              <Section className="my-6 rounded-lg border border-gray-700 bg-gray-750 p-4">
-                <Text className="m-0 text-sm font-medium text-gray-300">
-                  📅 Date & Time: {currentDate}
-                </Text>
-                <Text className="m-0 text-sm font-medium text-gray-300">
-                  📱 Device: Chrome on Windows
-                </Text>
-                <Text className="m-0 text-sm font-medium text-gray-300">
-                  📍 Location: Bengaluru, India
-                </Text>
-              </Section>
-
-              <Text className="text-base leading-6 text-gray-300">
-                If you didn't log in recently, please secure your account immediately:
-              </Text>
-
-              {/* CTA Button */}
-              <Section className="my-8 text-center">
-                <Button
-                  className="rounded-md bg-indigo-600 px-5 py-3 text-base font-medium text-white no-underline hover:bg-indigo-700"
-                  href="https://yoursaas.com/account/security"
-                >
-                  Secure My Account
-                </Button>
-              </Section>
-
-              <Text className="text-base leading-6 text-gray-300">
-                Or copy and paste this URL into your browser:
-                <Link
-                  href="https://yoursaas.com/account/security"
-                  className="ml-1 text-indigo-400 no-underline"
-                >
-                  https://yoursaas.com/account/security
-                </Link>
-              </Text>
-            </Section>
-
-            {/* Help Section */}
-            <Section className="mt-8 border-t border-gray-700 pt-8">
-              <Text className="text-base leading-6 text-gray-300">
-                Need help? Contact our support team at{' '}
-                <Link
-                  href="mailto:support@yoursaas.com"
-                  className="text-indigo-400 no-underline"
-                >
-                  support@yoursaas.com
-                </Link>
-              </Text>
-            </Section>
-
-            {/* Footer */}
-            <Section className="mt-8 text-center">
-              <Text className="text-xs leading-4 text-gray-500">
-                © 2025 Your SaaS Company. All rights reserved.
-              </Text>
-              <Text className="m-0 text-xs leading-4 text-gray-500">
-                123 SaaS Street, Tech Park, Bengaluru, India
-              </Text>
-              <Text className="mt-4 text-xs leading-4 text-gray-500">
-                <Link
-                  href="https://yoursaas.com/preferences"
-                  className="text-gray-500 underline"
-                >
-                  Email Preferences
-                </Link>{' '}
-                •{' '}
-                <Link
-                  href="https://yoursaas.com/unsubscribe"
-                  className="text-gray-500 underline"
-                >
-                  Unsubscribe
-                </Link>
-              </Text>
-            </Section>
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
-  );
 }`
 };
 
-// Function to detect and extract imports from the code
 const extractImports = (code: string): string => {
   const importRegex = /import\s+.*?from\s+['"].*?['"]\s*;?/g;
   const imports = code.match(importRegex) || [];
   return imports.join('\n');
 };
 
-// Function to extract the actual component code without imports
 const extractComponentCode = (code: string): string => {
-  // Remove import statements from the code
   return code.replace(/import\s+.*?from\s+['"].*?['"]\s*;?/g, '').trim();
 };
 
-// Function to generate complete HTML with React, ReactDOM, and Babel
 const generateHTML = (reactCode: string): string => {
-  // Extract imports and component code
   const importStatements = extractImports(reactCode);
-  const componentCode = extractComponentCode(reactCode);
-  
-  // Check if the code is a full component or just a function
+  let componentCode = extractComponentCode(reactCode);
+
   const isFullComponent = componentCode.includes('export default');
-  
-  // If it's a full component, we need to extract the function/component name
-  let appCode = componentCode;
   if (isFullComponent) {
-    // Attempt to find the component/function name
     const componentNameMatch = componentCode.match(/(?:function|const)\s+([A-Za-z0-9_]+)/);
     if (componentNameMatch && componentNameMatch[1]) {
       const componentName = componentNameMatch[1];
-      // Replace the export default line with nothing
-      appCode = componentCode.replace(/export\s+default\s+[A-Za-z0-9_]+;?/, '');
-      // Add an App function that renders the component
-      appCode = `${appCode}\n\nfunction App() { return <${componentName} />; }`;
+      componentCode = componentCode.replace(/export\s+default\s+[A-Za-z0-9_]+;?/, '');
+      componentCode += `\n\nfunction App() { return <${componentName} />; }`;
     }
   }
+  
+  // Prepare code with line numbers for error display
+  const codeLines = componentCode.split('\n');
+  const numberedCode = codeLines
+    .map((line, i) => `${(i + 1).toString().padStart(3, ' ')}| ${line}`)
+    .join('\n');
   
   return `
     <!DOCTYPE html>
@@ -355,10 +184,6 @@ const generateHTML = (reactCode: string): string => {
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>React Preview</title>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.development.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.development.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
-      <script src="https://cdn.tailwindcss.com"></script>
       <style>
         body { 
           margin: 0; 
@@ -370,13 +195,166 @@ const generateHTML = (reactCode: string): string => {
         #root { height: 100%; }
         .error { 
           color: #ff6b6b; 
-          padding: 12px; 
-          border: 1px solid #ff6b6b; 
-          border-radius: 8px; 
-          margin-top: 12px;
+          padding: 16px;
+          border: 1px solid rgba(255, 107, 107, 0.5);
+          border-radius: 8px;
+          margin: 16px auto;
           background-color: rgba(255, 60, 60, 0.1);
+          max-width: 90%;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+        .error-title {
+          font-weight: bold;
+          margin-bottom: 12px;
+          font-size: 1.1rem;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .error-title::before {
+          content: '';
+          display: block;
+          width: 16px;
+          height: 16px;
+          background-color: #ff6b6b;
+          border-radius: 50%;
+        }
+        .error-message {
+          padding: 12px;
+          background-color: rgba(0, 0, 0, 0.2);
+          border-radius: 4px;
+          overflow-x: auto;
+          margin-bottom: 12px;
+        }
+        .error-code {
+          padding: 12px;
+          background-color: rgba(0, 0, 0, 0.2);
+          border-radius: 4px;
+          overflow-x: auto;
+          white-space: pre;
+          line-height: 1.5;
+          margin-bottom: 12px;
+          border-left: 3px solid #ff6b6b;
+        }
+        .error-line-highlight {
+          background-color: rgba(255, 107, 107, 0.2);
+          padding: 1px 0;
+          display: block;
+        }
+        .error-location {
+          color: #ff9999;
+          font-size: 0.9em;
+          margin-bottom: 12px;
         }
       </style>
+      <script>
+        // Store the code to use in error displays
+        window.sourceCode = ${JSON.stringify(componentCode)};
+        window.numberedCode = ${JSON.stringify(numberedCode)};
+        
+        // Parse error message to extract line and column numbers
+        function parseErrorMessage(message) {
+          const lineColMatch = message.match(/\\(([0-9]+):([0-9]+)\\)/);
+          if (lineColMatch) {
+            return {
+              line: parseInt(lineColMatch[1]),
+              column: parseInt(lineColMatch[2])
+            };
+          }
+          
+          // Handle Babel specific syntax errors
+          const babelMatch = message.match(/([0-9]+):([0-9]+)\\)/);
+          if (babelMatch) {
+            return {
+              line: parseInt(babelMatch[1]),
+              column: parseInt(babelMatch[2])
+            };
+          }
+          
+          return null;
+        }
+        
+        // Format error with code context
+        function formatErrorWithCode(message, error) {
+          const location = parseErrorMessage(message);
+          const codeLines = window.sourceCode.split('\\n');
+          
+          let formattedMessage = '<div class="error-message">' + message.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+          
+          if (location) {
+            const { line, column } = location;
+            formattedMessage += '<div class="error-location">Error at line ' + line + ', column ' + column + '</div>';
+            
+            // Show code context with the error line highlighted
+            const startLine = Math.max(0, line - 3);
+            const endLine = Math.min(codeLines.length, line + 2);
+            let codeContext = '';
+            
+            for (let i = startLine; i < endLine; i++) {
+              const lineNum = i + 1;
+              const isErrorLine = lineNum === line;
+              const lineContent = codeLines[i] || '';
+              
+              if (isErrorLine) {
+                codeContext += '<span class="error-line-highlight">';
+                codeContext += lineNum.toString().padStart(3, ' ') + '| ' + lineContent.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                if (column > 0) {
+                  codeContext += '\\n' + ' '.repeat(column + 5) + '^';
+                }
+                codeContext += '</span>\\n';
+              } else {
+                codeContext += lineNum.toString().padStart(3, ' ') + '| ' + lineContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '\\n';
+              }
+            }
+            
+            formattedMessage += '<div class="error-code">' + codeContext + '</div>';
+          } else {
+            // If we can't parse line/column, just show all code
+            formattedMessage += '<div class="error-code">' + window.numberedCode.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+          }
+          
+          return formattedMessage;
+        }
+        
+        // Display formatted error
+        function displayError(title, message, error) {
+          const formattedMessage = formatErrorWithCode(message, error);
+          
+          document.body.innerHTML = \`
+            <div class="error">
+              <div class="error-title">\${title}</div>
+              \${formattedMessage}
+            </div>
+          \`;
+          
+          // Send the detailed error to parent frame
+          window.parent.postMessage({
+            type: 'COMPILE_ERROR',
+            error: message,
+            formattedError: document.body.innerHTML
+          }, '*');
+        }
+        
+        // Set up error handling before anything else loads
+        window.onerror = function(message, source, lineno, colno, error) {
+          console.error("Error caught:", message, source);
+          
+          if (source && source.includes('babel')) {
+            displayError('Babel Syntax Error', message, error);
+            return true; // Prevents default error handler
+          } else {
+            displayError('JavaScript Error', message, error);
+            return true;
+          }
+        };
+      </script>
+    </head>
+    <body class="dark">
+      <div id="root"></div>
+      
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.development.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.development.js"></script>
+      <script src="https://cdn.tailwindcss.com"></script>
       <script>
         tailwind.config = {
           darkMode: 'class',
@@ -390,60 +368,28 @@ const generateHTML = (reactCode: string): string => {
           }
         }
       </script>
-    </head>
-    <body class="dark">
-      <div id="root"></div>
-      <script type="text/babel">
-        // React and ReactDOM are already loaded
-        const { useState, useEffect, useRef, useCallback, useMemo, useContext, createContext } = React;
-        
-        // Import mock for @react-email/components
-        const ReactEmail = {};
-        
-        // Mock the components from @react-email/components
-        const {
-          Body, Button, Container, Head, Heading, Html, Img, 
-          Link, Preview, Section, Tailwind, Text
-        } = {
-          Body: ({ children, className, ...props }) => <body className={className} {...props}>{children}</body>,
-          Button: ({ children, className, href, ...props }) => <a href={href} className={className} {...props}>{children}</a>,
-          Container: ({ children, className, ...props }) => <div className={className} {...props}>{children}</div>,
-          Head: ({ children, ...props }) => <head {...props}>{children}</head>,
-          Heading: ({ children, className, ...props }) => <h1 className={className} {...props}>{children}</h1>,
-          Html: ({ children, ...props }) => <html {...props}>{children}</html>,
-          Img: ({ src, alt, width, height, className, ...props }) => 
-            <img src={src} alt={alt} width={width} height={height} className={className} {...props} />,
-          Link: ({ children, href, className, ...props }) => <a href={href} className={className} {...props}>{children}</a>,
-          Preview: ({ children, ...props }) => <div style={{ display: 'none' }} {...props}>{children}</div>,
-          Section: ({ children, className, ...props }) => <div className={className} {...props}>{children}</div>,
-          Tailwind: ({ children, ...props }) => <div {...props}>{children}</div>,
-          Text: ({ children, className, ...props }) => <p className={className} {...props}>{children}</p>
-        };
-        
-        // Log that the imports were processed
-        console.log("Processed imports:", ${JSON.stringify(importStatements)});
-        
+      
+      <script>
+        window.addEventListener('unhandledrejection', function(e) {
+          displayError('Promise Rejection', e.reason ? e.reason.toString() : 'Unhandled rejection');
+        });
+      </script>
+      
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js" onerror="displayError('Loading Error', 'Failed to load Babel transpiler')"></script>
+      
+      <script type="text/babel" data-type="module">
         try {
-          ${appCode}
+          // Pre-declare hooks so code using useState, useEffect, etc., works.
+          const { useState, useEffect, useRef } = React;
+          
+          ${componentCode}
           
           ReactDOM.render(
             <App />,
             document.getElementById('root')
           );
         } catch (error) {
-          ReactDOM.render(
-            <div className="error">
-              <strong>Error:</strong>
-              <pre>{error.toString()}</pre>
-            </div>,
-            document.getElementById('root')
-          );
-          
-          // Send error to parent window
-          window.parent.postMessage({
-            type: 'COMPILE_ERROR',
-            error: error.toString()
-          }, '*');
+          displayError('React Error', error.toString(), error);
         }
       </script>
     </body>
@@ -452,99 +398,163 @@ const generateHTML = (reactCode: string): string => {
 };
 
 const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false }) => {
-  const [code, setCode] = useState<string>(DEFAULT_CODE);
-  const [displayCode, setDisplayCode] = useState<string>(DEFAULT_CODE);
+  const [code, setCode] = useState<string>(TEMPLATES.counter);
+  const [displayCode, setDisplayCode] = useState<string>(TEMPLATES.counter);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("counter");
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [formattedError, setFormattedError] = useState<string | null>(null);
   const [autoCompile, setAutoCompile] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<{ title: string, description: string } | null>(null);
   const [isSuccessToast, setIsSuccessToast] = useState<boolean>(true);
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const compileTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastCompileTimeRef = useRef<number>(0);
+  
+  // Throttling and debouncing control 
+  const DEBOUNCE_TIME = 800; // ms to wait after typing stops
+  const MIN_COMPILE_INTERVAL = 1500; // minimum ms between compilations
 
-  // Handle window messages from the iframe
+  // Memoized debounced compilation function
+  const debouncedCompile = useCallback((newCode: string) => {
+    if (compileTimeoutRef.current) {
+      clearTimeout(compileTimeoutRef.current);
+    }
+
+    setIsTyping(true);
+    
+    compileTimeoutRef.current = setTimeout(() => {
+      const now = Date.now();
+      const timeElapsed = now - lastCompileTimeRef.current;
+      
+      if (timeElapsed < MIN_COMPILE_INTERVAL) {
+        // If we're compiling too frequently, delay further
+        const additionalDelay = MIN_COMPILE_INTERVAL - timeElapsed;
+        
+        compileTimeoutRef.current = setTimeout(() => {
+          setDisplayCode(newCode);
+          setIsTyping(false);
+          lastCompileTimeRef.current = Date.now();
+        }, additionalDelay);
+      } else {
+        setDisplayCode(newCode);
+        setIsTyping(false);
+        lastCompileTimeRef.current = Date.now();
+      }
+    }, DEBOUNCE_TIME);
+  }, []);
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'COMPILE_ERROR') {
         setError(event.data.error);
+        if (event.data.formattedError) {
+          setFormattedError(event.data.formattedError);
+        }
       }
     };
-
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Update iframe content when displayCode changes or on manual compile
+  // Optimized iframe update effect
   useEffect(() => {
     if (!iframeRef.current) return;
+
+    let isMounted = true;
     
-    try {
-      setIsCompiling(true);
-      setError(null);
-      const htmlContent = generateHTML(displayCode);
-      
-      // Write to the iframe
-      const iframe = iframeRef.current;
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      
-      if (iframeDoc) {
-        iframeDoc.open();
-        iframeDoc.write(htmlContent);
-        iframeDoc.close();
+    const updateIframe = async () => {
+      try {
+        setIsCompiling(true);
+        setError(null);
+        setFormattedError(null);
+        
+        // Generate HTML in a non-blocking way using setTimeout
+        setTimeout(() => {
+          if (!isMounted) return;
+          
+          try {
+            const htmlContent = generateHTML(displayCode);
+            const iframe = iframeRef.current;
+            if (!iframe) return;
+            
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (iframeDoc) {
+              iframeDoc.open();
+              iframeDoc.write(htmlContent);
+              iframeDoc.close();
+            }
+            
+            // Reset the compiling state after a slight delay to show the spinner
+            setTimeout(() => {
+              if (isMounted) {
+                setIsCompiling(false);
+              }
+            }, 300);
+          } catch (err) {
+            console.error("Failed to update iframe:", err);
+            if (isMounted) {
+              setError(err instanceof Error ? err.toString() : String(err));
+              setIsCompiling(false);
+              showToast({
+                title: "Compilation Error",
+                description: "There was an error compiling your code.",
+              }, false);
+            }
+          }
+        }, 0);
+      } catch (err) {
+        if (isMounted) {
+          console.error("Error in updateIframe:", err);
+          setError(err instanceof Error ? err.toString() : String(err));
+          setIsCompiling(false);
+        }
       }
-      
-      setTimeout(() => {
-        setIsCompiling(false);
-      }, 300); // Short delay to show compilation effect
-    } catch (err) {
-      console.error("Failed to update iframe:", err);
-      setError(err instanceof Error ? err.toString() : String(err));
-      setIsCompiling(false);
-      
-      showToast({
-        title: "Compilation Error",
-        description: "There was an error compiling your code.",
-      }, false);
-    }
+    };
+
+    updateIframe();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [displayCode]);
 
-  // Show toast notification
   const showToast = (message: { title: string, description: string }, success: boolean = true) => {
     setIsSuccessToast(success);
     setToastMessage(message);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Handle code changes
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setCode(e.target.value);
+    const newCode = e.target.value;
+    setCode(newCode);
+    
     if (autoCompile) {
-      setDisplayCode(e.target.value);
+      debouncedCompile(newCode);
     }
   };
 
-  // Manually compile code
   const handleCompile = () => {
     setDisplayCode(code);
+    lastCompileTimeRef.current = Date.now();
     showToast({
       title: "Code Compiled",
       description: "Your code has been compiled and is now running in the preview.",
     });
   };
 
-  // Handle template changes
   const handleTemplateChange = (template: string) => {
     setSelectedTemplate(template);
-    setCode(TEMPLATES[template as keyof typeof TEMPLATES]);
+    setCode(TEMPLATES[template]);
     if (autoCompile) {
-      setDisplayCode(TEMPLATES[template as keyof typeof TEMPLATES]);
+      setDisplayCode(TEMPLATES[template]);
+      lastCompileTimeRef.current = Date.now();
     }
   };
 
-  // Function to handle pasting code with imports
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const pastedText = e.clipboardData.getData('text');
-    // Check if the pasted content has import statements
     if (pastedText.includes('import') && pastedText.includes('from')) {
       setCode(pastedText);
       if (autoCompile) {
@@ -557,11 +567,25 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
     }
   };
 
+  const copyError = () => {
+    navigator.clipboard.writeText(error || "");
+    showToast({
+      title: "Error Copied",
+      description: "The error message was copied to your clipboard.",
+    });
+  };
+
+  const dismissError = () => {
+    setError(null);
+    setFormattedError(null);
+  };
+
+  const templateKeys = Object.keys(TEMPLATES);
+
   return (
     <div className="flex flex-col w-full h-full mx-auto gap-4 text-gray-100">
-      {/* Toast notification */}
       {toastMessage && (
-        <div className={`fixed top-6 right-6 max-w-sm ${isSuccessToast ? 'bg-gray-800 border-indigo-500' : 'bg-gray-800 border-red-500'} border-l-4 shadow-xl rounded-md p-4 z-50 transition-all duration-300 transform`}>
+        <div className={`fixed top-6 right-6 max-w-sm ${isSuccessToast ? 'bg-gray-800 border-indigo-500' : 'bg-gray-800 border-red-500'} border-l-4 shadow-xl rounded-md p-4 z-50 transition-all duration-300`}>
           <div className="flex items-start">
             <div className={`flex-shrink-0 mr-3 ${isSuccessToast ? 'text-indigo-400' : 'text-red-400'}`}>
               {isSuccessToast ? (
@@ -615,9 +639,8 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4 flex-grow">
-        {/* Code Editor Side */}
         <div className="w-full lg:w-1/2 border border-gray-700 rounded-lg bg-gray-850 shadow-lg overflow-hidden">
-          <div className="p-3 border-b border-gray-700 bg-gray-800 flex justify-between">
+          <div className="p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
@@ -627,13 +650,13 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
               <h3 className="font-medium text-gray-300 text-sm ml-2">editor.tsx</h3>
             </div>
             <div className="flex rounded-md overflow-hidden border border-gray-700">
-              {["counter", "todoList", "fetchData", "reactEmail", "loginEmail"].map((tab) => (
+              {templateKeys.map((tab) => (
                 <button 
                   key={tab}
                   className={`px-3 py-1 text-xs transition-colors ${selectedTemplate === tab ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-750'}`}
                   onClick={() => handleTemplateChange(tab)}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1).replace(/([A-Z])/g, ' $1').trim()}
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
               ))}
             </div>
@@ -650,16 +673,12 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
               onChange={handleCodeChange}
               onPaste={handlePaste}
               spellCheck="false"
-              style={{
-                lineHeight: "1.5rem",
-                tabSize: 2,
-              }}
+              style={{ lineHeight: "1.5rem", tabSize: 2 }}
             />
           </div>
         </div>
         
-        {/* Preview Side */}
-        <div className="w-full lg:w-1/2 border border-gray-700 rounded-lg bg-gray-850 shadow-lg overflow-hidden">
+        <div className="w-full lg:w-1/2 border border-gray-700 rounded-lg bg-gray-850 shadow-lg overflow-hidden relative">
           <div className="p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
@@ -667,6 +686,14 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
               </svg>
               <h3 className="font-medium text-gray-300 text-sm">Live Preview</h3>
             </div>
+            {isTyping && autoCompile && (
+              <div className="flex items-center gap-2 text-xs text-yellow-400 animate-pulse">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Typing...
+              </div>
+            )}
             {isCompiling && (
               <div className="flex items-center gap-2 text-xs text-indigo-400 animate-pulse">
                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -677,35 +704,49 @@ const ReactCodeCompiler: React.FC<{ darkMode?: boolean }> = ({ darkMode = false 
               </div>
             )}
           </div>
-          <div className="p-4 bg-gray-900 h-[500px]">
-            <div className="rounded-md h-full bg-gray-900 overflow-hidden relative">
-              {error ? (
-                <div className="text-red-400 p-4 bg-red-900/20 border border-red-800/30 rounded h-full overflow-auto">
-                  <div className="flex items-center gap-2 mb-3">
-                    <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <strong className="text-red-300">Compilation Error</strong>
-                  </div>
-                  <pre className="mt-2 whitespace-pre-wrap text-sm font-mono bg-gray-800/50 p-3 rounded border border-red-900/30">{error}</pre>
+          <div className="relative p-4 bg-gray-900 h-[500px]">
+            <iframe
+              ref={iframeRef}
+              title="React Preview"
+              className="w-full h-full border-none bg-gray-900"
+              sandbox="allow-scripts allow-same-origin"
+            />
+            {error && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/20 border border-red-800/30 rounded p-4 z-20 overflow-auto">
+                {  
+                  
+               
+                  <>
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <strong className="text-red-300 text-lg">Compilation Error</strong>
+                    </div>
+                    <pre className="whitespace-pre-wrap text-sm font-mono bg-gray-800/50 p-3 rounded border border-red-900/30 mb-4">{error}</pre>
+                  </>
+                }
+                <div className="flex gap-3 mt-4">
+                  <button 
+                    onClick={copyError}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                  >
+                    Copy Error
+                  </button>
+                  <button 
+                    onClick={dismissError}
+                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                  >
+                    Dismiss
+                  </button>
                 </div>
-              ) : (
-                <iframe
-                  ref={iframeRef}
-                  title="React Preview"
-                  className="w-full h-full border-none bg-gray-900"
-                  sandbox="allow-scripts allow-same-origin"
-                />
-              )}
-              
-              {/* Glowing corner effects */}
-              <div className="absolute top-0 left-0 w-16 h-16 bg-indigo-500/10 blur-xl rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-              <div className="absolute bottom-0 right-0 w-20 h-20 bg-purple-500/10 blur-xl rounded-full translate-x-1/2 translate-y-1/2"></div>
-            </div>
+              </div>
+            )}
           </div>
+          <div className="absolute top-0 left-0 w-16 h-16 bg-indigo-500/10 blur-xl rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-20 h-20 bg-purple-500/10 blur-xl rounded-full translate-x-1/2 translate-y-1/2"></div>
         </div>
       </div>
-   
     </div>
   );
 };
