@@ -17,6 +17,44 @@
       50% { transform: translateY(-8px) translateX(8px); }
    100% { transform: translateY(0) translateX(0); }
 }
+
+/* Custom Scrollbar Styling */
+@layer base {
+  /* For Webkit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background 0.3s ease;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.8);
+    background-clip: content-box;
+  }
+  
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  
+  /* For Firefox */
+  * {
+    scrollbar-color: rgba(0, 0, 0, 0.7) rgba(0, 0, 0, 0.05);
+    scrollbar-width: thin;
+  }
+}
+
 /* Animation utilities */
 @layer utilities {
   .animate-float {

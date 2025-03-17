@@ -326,7 +326,7 @@ function App() {
       
       <main className={`
         flex-grow w-full relative z-10
-        ${currentPage === 'coding-interview' ? 'max-w-full px-4 sm:px-6 py-4' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2'}
+        max-w-full px-4 sm:px-6 py-4' '}
       `}>
         {renderPage()}
       </main>
