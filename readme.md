@@ -1,5 +1,6 @@
 # CodeSense AI - AI-Powered Technical Interview Platform
 
+Live link : https://sensecode.netlify.app
 ![screenshot (5)](https://github.com/user-attachments/assets/372cc383-5e6f-46fe-bc84-b9398aa926a6)
 ![screenshot (6)](https://github.com/user-attachments/assets/e04e615a-1c84-4cbc-8a92-25a5c29e2d3c)
 ![screenshot-2](https://github.com/user-attachments/assets/5989fccc-16e0-4769-8f66-bb8f8992eb49)
