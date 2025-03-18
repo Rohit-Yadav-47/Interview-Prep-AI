@@ -426,9 +426,16 @@ function App() {
         navigateTo={navigateTo}
       />
       
-      <main className="flex-grow w-full relative z-10 container mx-auto px-4 py-4 sm:py-6">
-        {renderPage()}
-      </main>
+      <main
+  className={
+    currentPage === "home"
+      ? "relative z-10 w-full"
+      : "relative z-10 w-full px-10 py-4 sm:py-6"
+  }
+>
+  {renderPage()}
+</main>
+
       <Footer />
     </div>
   ); 
